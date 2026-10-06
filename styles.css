@@ -1066,3 +1066,13 @@ body[data-phase="profile"] #evolvedFairy { width:320px;height:320px; }
 @media(max-width:760px) {
   body[data-phase="profile"] #evolvedFairy { width:min(72vw,280px);height:min(72vw,280px); }
 }
+/* Tailored paper, satin bow, and fine foil decoration; no text tag. */
+.workbench .gift { width:170px;height:170px;left:32%;bottom:20px;background:none;border-radius:0;box-shadow:none;transition:filter .5s; }
+.workbench .gift::before { display:none; }
+.gift>svg { display:block;width:100%;height:100%;overflow:visible; }
+.gift-lid { transition:transform .65s cubic-bezier(.2,.8,.2,1); }
+.gift-sparkle { transform-box:fill-box;transform-origin:center;animation:giftTwinkle 1.6s ease-in-out infinite; }
+.gift-inner-light { animation:giftGlow 2s ease-in-out infinite alternate; }
+@keyframes giftTwinkle { 0%,100%{opacity:.25;transform:translateY(3px) scale(.7)}50%{opacity:1;transform:translateY(-7px) scale(1.1)} }
+@keyframes giftGlow { from{opacity:.5}to{opacity:1} }
+@media(max-width:760px) { .workbench .gift { width:148px;height:148px;left:31%;bottom:12px; }.workbench .pedestal { width:128px;bottom:21px;left:31%; } }

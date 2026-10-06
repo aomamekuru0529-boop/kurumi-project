@@ -67,3 +67,13 @@ test('gift shakes in surprise for five seconds before swelling and releasing pow
  await page.clock.runFor(1200);assert.equal(await page.locator('body').getAttribute('data-phase'),'power');assert(await page.locator('#powerBurst').isVisible());
  await page.clock.runFor(2500);assert.equal(await page.locator('body').getAttribute('data-phase'),'power');assert(await page.locator('#powerBurst p').isVisible());await page.clock.runFor(600);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');assert(await page.locator('#thankYouMotes').isVisible());await page.clock.runFor(5000);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');assert.deepEqual(errors,[]);await page.close();
 });
+test('answers separately add inner sparkles, paper color, satin color and foil decoration',async()=>{
+ const {page,errors}=await open(390);await enter(page);
+ const color=()=>page.locator('#gift-paper stop').first().getAttribute('stop-color');
+ const satin=()=>page.locator('#gift-satin stop').first().getAttribute('stop-color');
+ const initialColor=await color(),initialSatin=await satin();
+ await page.locator('.option').nth(0).click();assert(await page.locator('#gift .gift-sparkle').count()>0);assert.equal(await color(),initialColor);assert.equal(await satin(),initialSatin);await page.clock.runFor(900);
+ await page.locator('.option').nth(1).click();const paperColor=await color();assert.notEqual(paperColor,initialColor);assert.equal(await satin(),initialSatin);await page.clock.runFor(900);
+ await page.locator('.option').nth(2).click();const satinColor=await satin();assert.notEqual(satinColor,initialSatin);assert.equal(await color(),paperColor);await page.clock.runFor(900);
+ await page.locator('.option').nth(3).click();assert.equal(await color(),paperColor);assert.equal(await satin(),satinColor);assert(await page.locator('#gift g[clip-path] path').count()>0);assert.equal(await page.locator('#gift .gift-lid').getAttribute('transform'),'translate(0 0)');assert.equal(await page.locator('#gift text').count(),0);await page.clock.runFor(500);await page.screenshot({path:'test-results/gift-complete-mobile.png'});assert.deepEqual(errors,[]);await page.close();
+});

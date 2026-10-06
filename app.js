@@ -1,6 +1,7 @@
 import { config } from './config.js';
 import { types, questions, resultIndex, shareUrl } from './experience.js';
 import { fairySvg } from './fairy.js';
+import { giftSvg } from './gift.js';
 import { Music } from './audio.js';
 import { renderCard, downloadBlob } from './card.js';
 
@@ -21,6 +22,7 @@ function show(screen,phase){
 }
 function mountFairy(id,type){const el=$(id);el.innerHTML=fairySvg(type,id.slice(1));el.setAttribute('aria-label',type?`${type.label}の妖精 ${type.name}`:'光の妖精');}
 for(const id of ['#strokeFairy','.mini-fairy'])mountFairy(id,null);
+$('#gift').innerHTML=giftSvg([]);
 for(const p of document.querySelectorAll('[data-company-message]'))p.textContent=config.companyMessage;
 if(config.companyName)$('#companyName').textContent=config.companyName;
 else $('#companyName').hidden=true;
@@ -71,11 +73,8 @@ function renderQuestion(){
 }
 function sparkFrom(el){const r=el.getBoundingClientRect(),g=$('#gift').getBoundingClientRect();for(let i=0;i<(reduced.matches?0:14);i++){const dot=document.createElement('i');dot.className='particle';dot.style.left=`${r.left+r.width/2}px`;dot.style.top=`${r.top+r.height/2}px`;dot.style.setProperty('--dx',`${g.left+g.width/2-r.left-r.width/2}px`);dot.style.setProperty('--dy',`${g.top+g.height/2-r.top-r.height/2}px`);$('#particles').append(dot);later(()=>dot.remove(),900);}}
 function answer(index,el){
-  if(state.phase!=='quiz'||el.disabled)return;for(const button of $('#options').children)button.disabled=true;sparkFrom(el);const step=state.answers.length,t=types[index];state.answers.push(index);
-  if(step===0)$('#gift').style.background=t.color;
-  if(step===1)for(const s of ['.ribbon-h','.ribbon-v'])$(s).style.background=t.accent;
-  if(step===2){$('#giftOrnament').textContent=t.symbol;$('#giftOrnament').style.opacity='1';}
-  if(step===3){$('#giftTag').textContent='FOR YOU';$('#giftTag').style.opacity='1';}
+  if(state.phase!=='quiz'||el.disabled)return;for(const button of $('#options').children)button.disabled=true;sparkFrom(el);state.answers.push(index);
+  $('#gift').innerHTML=giftSvg(state.answers);
   $('#quizProgress').style.width=`${state.answers.length/questions.length*100}%`;
   later(()=>{if(state.answers.length<questions.length)renderQuestion();else finishQuiz();},800);
 }
@@ -113,7 +112,7 @@ $('#gratitudeNext').onclick=()=>{if(state.phase!=='gratitude')return;show('trans
 function reset(){
   cancelTimers();state.answers=[];state.found=false;state.traveling=false;state.drag=null;state.strokeTime=0;state.strokeDown=false;state.strokeLast=null;state.gyroBase=null;state.exportBlob=null;exportPromise=null;lastStrokeKey=null;
   for(const id of ['#fairyInfoCard','#gratitudeCard','#combinedCard']){const e=$(id);e.classList.remove('show','handoff','materialize');e.removeAttribute('style');}
-  $('#combinedActions').classList.remove('show');$('#magicFullscreen').classList.remove('active');$('#flash').classList.remove('go');$('#strokeWrap').style.display='none';$('#strokeBar').style.width='0';$('#strokeWrap').style.removeProperty('--power-progress');$('#powerBurst').classList.remove('active');$('.workshop-room').inert=false;$('#quizWrap').hidden=false;$('#gift').className='gift';$('#gift').removeAttribute('style');for(const s of ['.ribbon-v','.ribbon-h'])$(s).removeAttribute('style');for(const id of ['#giftOrnament','#giftTag'])$(id).style.opacity='0';$('.workshop-bubble').innerHTML='あなたのこと、<br>少しだけ教えて！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='none';$('#particles').replaceChildren();$('#magicStarfield').replaceChildren();orb.tabIndex=-1;$('.hint').textContent='周りを見渡してみて';show('worldScreen','world');initialPan();focus(viewport);announce('もう一度、妖精を探しましょう。');
+  $('#combinedActions').classList.remove('show');$('#magicFullscreen').classList.remove('active');$('#flash').classList.remove('go');$('#strokeWrap').style.display='none';$('#strokeBar').style.width='0';$('#strokeWrap').style.removeProperty('--power-progress');$('#powerBurst').classList.remove('active');$('.workshop-room').inert=false;$('#quizWrap').hidden=false;$('#gift').className='gift';$('#gift').removeAttribute('style');$('#gift').innerHTML=giftSvg([]);$('.workshop-bubble').innerHTML='あなたのこと、<br>少しだけ教えて！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='none';$('#particles').replaceChildren();$('#magicStarfield').replaceChildren();orb.tabIndex=-1;$('.hint').textContent='周りを見渡してみて';show('worldScreen','world');initialPan();focus(viewport);announce('もう一度、妖精を探しましょう。');
 }
 $('#retryBtn').onclick=reset;
 function prepareExport(){const type=state.type;exportPromise=renderCard(type,config,shareUrl(config.publicUrl,location.href)).then(blob=>{if(state.type===type)state.exportBlob=blob;return blob;}).catch(error=>{console.warn('Card export unavailable:',error.message);return null;});}
