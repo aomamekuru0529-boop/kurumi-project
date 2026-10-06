@@ -1149,3 +1149,25 @@ body[data-phase="transform"] #strokeWrap { display:flex !important; }
   .flash.go { animation:none;opacity:.35; }
   .flash::before { display:none; }
 }
+/* Put the gift at the center of the screen, above the questions. */
+.workshop-room { display:flex;flex-direction:column;justify-content:center;gap:20px;max-width:920px;padding:85px 24px 36px; }
+.left-panel,.right-panel { width:100%; }
+.right-panel { max-width:620px; }
+.left-panel { padding:18px; }
+.workbench { height:480px; }
+.workbench .gift { left:50%;width:425px;height:425px;max-width:calc(100vw - 16px);bottom:15px; }
+.workbench .pedestal { left:50%;width:300px;max-width:80%;bottom:40px; }
+.workbench .tabletop { height:130px; }
+.workbench .mini-fairy { right:20px;top:60px;width:100px;height:100px; }
+.workshop-bubble { top:12px;right:130px;max-width:220px; }
+.workshop-bubble:after { right:18px; }
+@media(max-width:760px) {
+  .workshop-room { padding:75px 16px 28px;gap:16px; }
+  .left-panel { padding:12px; }
+  .workbench { height:430px; }
+  .workbench .gift { width:370px;height:370px;left:50%;bottom:16px; }
+  .workbench .pedestal { width:250px;bottom:36px;left:50%; }
+  .workbench .mini-fairy { width:80px;height:80px;right:12px;top:18px; }
+  .workshop-bubble { left:14px;right:auto;top:12px;max-width:calc(100% - 110px); }
+}
+@media(max-width:360px) { .workbench { height:380px; }.workbench .gift { height:304px; } }
