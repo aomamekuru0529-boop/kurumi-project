@@ -1192,3 +1192,40 @@ body[data-phase="profile"] #fairyInfoCard { animation:profileFromBelow .85s .2s 
 body[data-phase="profile"] #evolvedFairy { position:absolute !important;top:calc(27dvh - 85px) !important; }
 @keyframes fairyMoveToTop { from{translate:0 23dvh}to{translate:0 0} }
 @media(max-width:760px) { body[data-phase="profile"] #evolvedFairy { top:calc(27dvh - 70px) !important; } }
+/* A wooden workshop cabinet, with the guide and its speech kept together. */
+.workbench {
+  border-radius:18px;border:1px solid #a27a5555;
+  background:radial-gradient(ellipse at 50% 15%,#d3a56e24,transparent 60%),repeating-linear-gradient(90deg,#352a23 0px,#403127 42px,#30251e 43px,#463329 84px);
+  box-shadow:inset 0 0 50px #100c0999,inset 0 2px 0 #c6a07944,0 20px 45px #0004;
+}
+.back-panel { inset:18px 18px 115px;height:auto;border-radius:4px;background:linear-gradient(180deg,#130e0b66,transparent 40%,#130e0b44);border:1px solid #c6a07922;box-shadow:inset 0 0 28px #0006; }
+.cabinet-upright { position:absolute;top:10px;bottom:110px;width:16px;background:linear-gradient(90deg,#5d402c,#946c49 50%,#62472f);box-shadow:4px 0 8px #0004,inset 1px 0 #cdae7b66; }
+.cabinet-upright.left { left:12px; }.cabinet-upright.right { right:12px; }
+.shelf { left:18px;right:18px;height:16px;border-radius:2px;background:linear-gradient(#bc9465 0 15%,#8b623d 18% 75%,#553b26 80%);box-shadow:0 10px 15px #0005,inset 0 1px #e9c99d66; }
+.shelf-top { top:120px; }.shelf-mid { top:240px; }
+.paper-rolls { position:absolute;left:38px;top:54px;display:flex;gap:5px;align-items:flex-end; }
+.paper-rolls i { width:20px;height:66px;border-radius:5px 5px 0 0;background:linear-gradient(90deg,#baa88b,#e6d7b8 45%,#ad9b80);box-shadow:3px 0 7px #0003; }
+.paper-rolls i:nth-child(2) { height:54px;background:linear-gradient(90deg,#4b685c,#7b9683,#3c574b); }
+.paper-rolls i:nth-child(3) { height:61px;background:linear-gradient(90deg,#916168,#c39295,#805158); }
+.paper-rolls i:nth-child(4) { height:48px;background:linear-gradient(90deg,#9a7b46,#cdb174,#8d6e3c); }
+.storage-boxes { position:absolute;top:183px;left:35px;display:flex;gap:10px; }
+.storage-boxes i { display:block;width:75px;height:56px;border-radius:3px;background:linear-gradient(#91826a 0 12%,#71624f 13%);border:1px solid #c1aa8333;box-shadow:3px 5px 8px #0004; }
+.storage-boxes i::after { content:"";display:block;width:24px;height:9px;margin:18px auto;background:#d0c1a2;border:1px solid #594e3c;border-radius:1px; }
+.storage-boxes i:nth-child(2) { width:55px;background:linear-gradient(#6c8070 0 12%,#4d6253 13%); }
+.storage-boxes i:nth-child(3) { width:66px;background:linear-gradient(#a18a70 0 12%,#81694f 13%); }
+.cabinet-drawers { position:absolute;left:29px;right:29px;bottom:128px;height:62px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px; }
+.cabinet-drawers i { position:relative;background:linear-gradient(#7c583a,#64472f);border:1px solid #ad83574d;border-radius:2px;box-shadow:inset 0 0 10px #0004; }
+.cabinet-drawers i::after { content:"";position:absolute;left:50%;top:22px;transform:translateX(-50%);width:19px;height:7px;border-radius:3px;background:linear-gradient(#d5b780,#947141);box-shadow:0 2px 3px #0006; }
+.tabletop { background:linear-gradient(#b58b5d66,#80593733 8%,transparent 9%),repeating-linear-gradient(3deg,#765136 0,#855d3d 23px,#765136 24px,#8b6342 48px);border-top:4px solid #ad8154; }
+.tabletop::before { display:none; }
+.workshop-guide { position:absolute;right:24px;top:18px;width:190px;height:145px;z-index:5; }
+.workshop-guide .mini-fairy { left:50%;right:auto;top:60px;margin-left:-40px;width:80px;height:80px; }
+.workshop-guide .workshop-bubble { left:0;right:0;top:0;max-width:none;width:100%;box-sizing:border-box;font-size:13px;padding:9px 12px; }
+.workshop-guide .workshop-bubble::after { right:auto;left:calc(50% - 8px);bottom:-7px; }
+@media(max-width:760px) {
+  .workshop-guide { right:12px;top:12px;width:150px; }
+  .workshop-guide .workshop-bubble { font-size:11px; }
+  .paper-rolls { left:29px;gap:3px; }.paper-rolls i { width:15px; }
+  .storage-boxes { left:29px;gap:7px; }.storage-boxes i { width:60px; }
+  .cabinet-drawers { grid-template-columns:repeat(3,1fr); }.cabinet-drawers i:last-child { display:none; }
+}
