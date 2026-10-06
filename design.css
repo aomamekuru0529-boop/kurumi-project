@@ -41,13 +41,19 @@ body:not([data-phase="quiz"]) #workshopScreen .right-panel { display:none; }
 .right-panel .option { counter-increment:answer;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#33423866,#13201b);color:#e4dcc9;border:1px solid #b19b673d;border-radius:8px;font-size:14px;line-height:1.65;padding:14px 16px;min-height:58px; }
 .right-panel .option::before { content:"0" counter(answer);flex:none;font:11px Georgia,serif;letter-spacing:.04em;color:#a0875d; }
 .right-panel .option:not(:disabled):hover { background:#354334;border-color:#b79b64;transform:none; }
-.workshop-guide .workshop-bubble { background:#26352b;color:#f2e4c8;font-size:12px;line-height:1.6;font-weight:600;border:1px solid #b49a6355;border-radius:14px;box-shadow:0 6px 20px #0002; }
-.workshop-guide .workshop-bubble::after { background:#26352b; }
+.workshop-guide .workshop-bubble { font-size:12px;line-height:1.6;font-weight:600;padding:12px 14px; }
 .stroke-copy-top { max-width:600px; }
 .stroke-copy-top .question-num { font:10px Georgia,serif;letter-spacing:.23em;color:#d5bc8b;opacity:1; }
 .stroke-copy-top .question { font-family:var(--serif);font-weight:500;font-size:clamp(23px,5vw,34px);line-height:1.7;text-wrap:balance; }
-.stroke-bubble { background:#26352b;color:#f2e4c8;font-weight:600;font-size:13px;padding:9px 22px; }
-.stroke-bubble::after { background:#26352b; }
+.stroke-bubble { font-weight:600;font-size:13px;padding:12px 24px; }
+.workshop-guide .workshop-bubble,.stroke-bubble,.handoff-copy {
+  background:linear-gradient(180deg,#ffffff,#f7f5ef);color:#493e35;
+  border:1px solid #ffffff;border-radius:26px;text-shadow:none;
+  box-shadow:inset 0 3px 5px #fff,inset 0 -3px 7px #ded8cd66,0 8px 18px #0003;
+}
+.workshop-guide .workshop-bubble::after,.stroke-bubble::after,.handoff-copy::after {
+  background:#f7f5ef;border-radius:0 0 4px 0;
+}
 .stroke-hint { color:#c6d1c4;opacity:1;font-size:12px;line-height:2;max-width:32em;text-wrap:balance; }
 .stroke-progress { background:#ffffff15;height:4px; }
 .stroke-bar { background:linear-gradient(90deg,#b69863,#f9e7b8); }
