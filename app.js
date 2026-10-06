@@ -117,9 +117,11 @@ function transformFairy(){
     show('transformScreen','evolved');mountFairy('#evolvedFairy',state.type);mountFairy('#combinedFairyVisual',state.type);
     $('#evolvedFairy').className='evolved-fairy center-still';
     for(const prefix of ['fairyInfo','combined']){
-      $(`#${prefix}Title`).textContent=`${state.type.label}タイプ「${state.type.name}」`;
+      const title=$(`#${prefix}Title`);title.replaceChildren();
+      for(const text of [`${state.type.label}タイプ`, `「${state.type.name}」`]){const span=document.createElement('span');span.textContent=text;title.append(span);}
       $(`#${prefix}Desc`).textContent=state.type.desc;$(`#${prefix}Wish`).textContent=state.type.wish;
-      $(`#${prefix}Strengths`).textContent=state.type.strengths;
+      const strengths=$(`#${prefix}Strengths`);strengths.replaceChildren();
+      state.type.strengths.split('・').forEach((text,i)=>{if(i)strengths.append(document.createTextNode('・'));const span=document.createElement('span');span.textContent=text;strengths.append(span);});
     }
     announce('妖精が進化しました。');prepareExport();
     later(()=>{
