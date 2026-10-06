@@ -1,49 +1,92 @@
-// Equirectangular panorama projected onto a sphere, with DOM hotspots in the same camera.
+import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { Tour as Panorama } from './panorama.js';
+
+// A modeled village viewed from its snowy square. All scenery has real depth.
 export class Tour {
   constructor(viewport,orb,onView){
-    this.viewport=viewport;this.orb=orb;this.yaw=0;this.pitch=0;this.onView=onView;
-    this.canvas=document.createElement('canvas');this.canvas.className='tour-canvas';this.canvas.setAttribute('aria-hidden','true');viewport.prepend(this.canvas);viewport.append(orb);
-    const gl=this.canvas.getContext('webgl',{alpha:false,antialias:false});this.gl=gl;
-    if(gl){
-      const shader=(kind,source)=>{const s=gl.createShader(kind);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;};
-      const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,'attribute vec2 p;varying vec2 uv;void main(){uv=p;gl_Position=vec4(p,0.,1.);}'));
-      gl.attachShader(program,shader(gl.FRAGMENT_SHADER,`precision mediump float;varying vec2 uv;uniform sampler2D panorama;uniform float yaw,pitch,aspect;void main(){vec3 d=normalize(vec3(uv.x*aspect*.7,uv.y*.7,1.));float cp=cos(pitch),sp=sin(pitch);d=vec3(d.x,d.y*cp+d.z*sp,d.z*cp-d.y*sp);float cy=cos(yaw),sy=sin(yaw);d=vec3(d.x*cy+d.z*sy,d.y,d.z*cy-d.x*sy);vec2 st=vec2(fract(atan(d.x,d.z)/6.2831853+.5),.5-asin(d.y)/3.1415927);gl_FragColor=texture2D(panorama,st);}`));gl.linkProgram(program);gl.useProgram(program);
-      const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const p=gl.getAttribLocation(program,'p');gl.enableVertexAttribArray(p);gl.vertexAttribPointer(p,2,gl.FLOAT,false,0,0);
-      const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,this.art());this.uniforms=Object.fromEntries(['yaw','pitch','aspect'].map(k=>[k,gl.getUniformLocation(program,k)]));
-    }else{this.context=this.canvas.getContext('2d');const art=this.art();this.pixels=art.getContext('2d').getImageData(0,0,art.width,art.height);}
+    this.viewport=viewport;this.orb=orb;this.onView=onView;this.reduced=matchMedia('(prefers-reduced-motion: reduce)');this.yaw=0;this.pitch=0;
+    try{this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});}catch{return new Panorama(viewport,orb,onView);}
+    this.canvas=this.renderer.domElement;this.canvas.className='tour-canvas';this.canvas.setAttribute('aria-hidden','true');this.canvas.dataset.scene='3d-village';viewport.prepend(this.canvas);viewport.append(orb);
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.35;
+    this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#101c30');this.scene.fog=new THREE.FogExp2('#17283d',.012);
+    this.camera=new THREE.PerspectiveCamera(2*Math.atan(.7)*180/Math.PI,1,.1,180);this.camera.position.set(0,2.8,0);
+    this.materialCache=new Map();this.materials={snow:this.material('#c4d5df'),wood:this.material('#4e302b'),trim:this.material('#b49668'),roof:this.material('#272d3b'),pine:this.material('#173e35'),gold:this.material('#bba16a',.45,.6),light:new THREE.MeshStandardMaterial({color:'#ffd08b',emissive:'#ffb74d',emissiveIntensity:2,roughness:.4})};
+    this.scene.add(new THREE.HemisphereLight('#b0cbe6','#3c3b49',2));const moon=new THREE.DirectionalLight('#bcdcff',2.1);moon.position.set(-15,30,-10);moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);Object.assign(moon.shadow.camera,{left:-24,right:24,top:24,bottom:-24,far:90});moon.shadow.normalBias=.08;this.scene.add(moon);
+    this.build();this.batchScenery();this.renderer.shadowMap.autoUpdate=false;this.renderer.shadowMap.needsUpdate=true;this.hotspot=new THREE.Vector3(-Math.sin(1.15)*11,3.15,Math.cos(1.15)*11);
     new ResizeObserver(()=>this.render()).observe(viewport);
+    let lastFrame=-Infinity;const tick=t=>{if(!this.reduced.matches&&t-lastFrame>100&&t-(this.lastDraw??-Infinity)>90&&document.body.dataset.phase==='world'&&!document.hidden){lastFrame=t;this.snow.rotation.y=t*.000008;this.render();}requestAnimationFrame(tick);};requestAnimationFrame(tick);
   }
-  art(){
-    const c=document.createElement('canvas');c.width=4096;c.height=2048;const x=c.getContext('2d');
-    const sky=x.createLinearGradient(0,0,0,2048);sky.addColorStop(0,'#030913');sky.addColorStop(.48,'#182b40');sky.addColorStop(.53,'#71818b');sky.addColorStop(.56,'#dce5e8');sky.addColorStop(1,'#8cabbc');x.fillStyle=sky;x.fillRect(0,0,4096,2048);
-    for(let i=0;i<700;i++){x.fillStyle=`rgba(240,233,211,${.2+i%5*.12})`;x.beginPath();x.arc(i*173%4096,90+i*83%870,i%7===0?2:1,0,7);x.fill();}
-    x.fillStyle='#b9c5cb';x.beginPath();x.moveTo(0,1100);for(let i=0;i<=4096;i+=64)x.lineTo(i,990+Math.sin(i*.009)*42+Math.sin(i*.017)*25);x.lineTo(4096,1230);x.lineTo(0,1230);x.fill();
-    const tree=(a,b,size)=>{x.fillStyle='#112c28';x.fillRect(a-5,b,10,size*.25);for(let n=0;n<3;n++){const y=b-size+n*size*.23,w=size*(.21+n*.06);x.beginPath();x.moveTo(a,y);x.lineTo(a-w,y+size*.55);x.lineTo(a+w,y+size*.55);x.fill();x.fillStyle='#d5e1dd';x.beginPath();x.moveTo(a,y);x.lineTo(a-w*.45,y+size*.22);x.lineTo(a+w*.45,y+size*.22);x.fill();x.fillStyle='#112c28';}};
-    for(let i=0;i<36;i++)tree((i*233)%4096,1120+(i%3)*50,140+(i%4)*35);
-    const house=(a,b,w,color)=>{x.fillStyle=color;x.fillRect(a,b,w,w*.7);x.fillStyle='#33262a';x.beginPath();x.moveTo(a-16,b);x.lineTo(a+w*.5,b-w*.45);x.lineTo(a+w+16,b);x.fill();x.strokeStyle='#e7e9dc';x.lineWidth=9;x.beginPath();x.moveTo(a-16,b);x.lineTo(a+w*.5,b-w*.45);x.lineTo(a+w+16,b);x.stroke();x.fillStyle='#f0c57a';x.shadowColor='#eec270';x.shadowBlur=20;for(let j=0;j<3;j++)x.fillRect(a+18+j*w*.28,b+22,w*.12,w*.18);x.shadowBlur=0;x.fillStyle='#231d21';x.fillRect(a+w*.45,b+w*.35,w*.18,w*.35);};
-    house(440,1050,180,'#67474d');house(690,1070,150,'#5d5849');house(3120,1040,200,'#5a4540');house(3430,1080,170,'#3d514b');
-    tree(2048,1290,500);x.fillStyle='#edc97b';x.font='60px serif';x.textAlign='center';x.fillText('✦',2048,797);for(let i=0;i<40;i++){const y=860+i*9,w=(y-795)*.3;x.beginPath();x.arc(2048+Math.sin(i*2.4)*w,y,4,0,7);x.shadowBlur=12;x.shadowColor='#ffe49a';x.fill();}x.shadowBlur=0;
-    // Snow paths curve around the complete panorama; both edges match.
-    x.strokeStyle='#e6ecec55';x.lineWidth=100;x.beginPath();x.moveTo(0,1640);x.bezierCurveTo(1000,1450,2400,1390,4096,1640);x.stroke();
-    return c;
+  material(color,roughness=.85,metalness=0){const key=`${color}/${roughness}/${metalness}`;if(!this.materialCache.has(key))this.materialCache.set(key,new THREE.MeshStandardMaterial({color,roughness,metalness}));return this.materialCache.get(key);}
+  mesh(geometry,material,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+  box(parent,w,h,d,x,y,z,material){return this.mesh(new THREE.BoxGeometry(w,h,d),material,parent,x,y,z);}
+  sphere(parent,r,x,y,z,material){return this.mesh(new THREE.SphereGeometry(r,12,8),material,parent,x,y,z);}
+  cladding(color){
+    const material=this.material(color).clone(),canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,512,512);
+    for(let y=0;y<512;y+=32){ctx.fillStyle='#00000022';ctx.fillRect(0,y,512,2);ctx.fillStyle='#ffffff33';ctx.fillRect(0,y+2,512,1);for(let i=0;i<12;i++){ctx.fillStyle='#00000008';ctx.fillRect((i*71+y*5)%512,y+5+i%18,30+i*4,1);}}
+    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;material.map=texture;return material;
+  }
+  text(text){const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');x.fillStyle='#243d32';x.fillRect(0,0,512,128);x.strokeStyle='#c5a770';x.lineWidth=4;x.strokeRect(8,8,496,112);x.fillStyle='#f1ddb0';x.font='500 38px Georgia';x.textAlign='center';x.fillText(text,256,78);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshStandardMaterial({map:t,roughness:.8});}
+  wire(parent,points,color='#304334',radius=.025){const curve=new THREE.CatmullRomCurve3(points);return this.mesh(new THREE.TubeGeometry(curve,32,radius,6,false),this.material(color),parent);}
+  house(angle,distance,color,name){
+    const g=new THREE.Group();g.position.set(-Math.sin(angle)*distance,0,Math.cos(angle)*distance);g.rotation.y=angle+Math.PI;g.userData.kind='house';this.scene.add(g);
+    const wall=this.cladding(color),m=this.materials,w=7,h=4.6,d=5.8;
+    this.box(g,w,h,d,0,h/2,0,wall);this.box(g,w+.3,.3,d+.3,0,.15,0,this.material('#72828e'));
+    // Triangle gable extruded through the house, beneath two pitched roof slabs.
+    const shape=new THREE.Shape();shape.moveTo(-w/2,0);shape.lineTo(w/2,0);shape.lineTo(0,2.6);shape.closePath();const geom=new THREE.ExtrudeGeometry(shape,{depth:d,bevelEnabled:false});this.mesh(geom,wall,g,0,h,-d/2);
+    for(const side of [-1,1]){const roof=this.box(g,4.9,.24,d+1,side*1.95,h+1.2,0,m.roof);roof.rotation.z=-side*.61;const snow=this.box(g,4.95,.18,d+1.04,side*1.95,h+1.37,0,m.snow);snow.rotation.z=-side*.61;}
+    for(const xx of [-3.35,0,3.35])this.box(g,.16,h,.18,xx,h/2,d/2+.08,m.wood);
+    for(const yy of [1.0,3.5,4.5])this.box(g,w,.13,.18,0,yy,d/2+.09,m.wood);
+    const attic=this.mesh(new THREE.CylinderGeometry(.42,.42,.08,24),m.light,g,0,5.65,d/2+.06);attic.rotation.x=Math.PI/2;this.mesh(new THREE.TorusGeometry(.45,.075,8,24),m.trim,g,0,5.65,d/2+.13);this.box(g,.07,.85,.1,0,5.65,d/2+.2,m.wood);this.box(g,.85,.07,.1,0,5.65,d/2+.2,m.wood);
+    this.box(g,.8,1.7,.9,2.1,6.5,-1,m.wood);this.box(g,1.02,.18,1.05,2.1,7.4,-1,m.snow);
+    const window=(x,y,z,side=false)=>{const group=new THREE.Group();group.position.set(x,y,z);if(side)group.rotation.y=Math.PI/2;g.add(group);this.box(group,1.5,1.9,.14,0,0,0,m.trim);this.box(group,1.24,1.64,.16,0,0,.06,m.light);this.box(group,.07,1.7,.2,0,0,.15,m.wood);this.box(group,1.28,.07,.2,0,0,.15,m.wood);this.box(group,1.7,.15,.35,0,-1,.16,m.snow);for(const s of [-1,1])this.box(group,.23,1.6,.1,s*.48,0,.17,this.material('#b27c65'));};
+    window(-2,2.4,d/2+.12);window(2,2.4,d/2+.12);window(w/2+.1,2.3,1,true);window(w/2+.1,2.3,-1.4,true);
+    this.box(g,1.35,2.7,.22,0,1.5,d/2+.18,this.material('#243e35'));this.sphere(g,.065,.45,1.5,d/2+.32,m.gold);
+    const wreath=this.mesh(new THREE.TorusGeometry(.36,.1,8,24),m.pine,g,0,2.1,d/2+.36);for(let i=0;i<7;i++)this.sphere(g,.055,Math.sin(i)*.34,2.1+Math.cos(i)*.34,d/2+.47,this.material('#a8313c'));
+    this.box(g,1.8,.25,.9,0,.15,d/2+.55,m.snow);this.box(g,2.9,.62,.15,0,3.85,d/2+.2,this.text(name));
+    // Warm festive festoons follow the eaves, rather than floating in the sky.
+    const points=[];for(let i=0;i<=24;i++){const xx=-3.7+i*7.4/24,yy=4.45-Math.sin(i/24*Math.PI)*.42;points.push(new THREE.Vector3(xx,yy,3.48));if(i%2===0){const colors=['#ffc574','#e16b67','#91baa2'];const bulb=new THREE.MeshBasicMaterial({color:colors[(i/2)%3]});this.sphere(g,.065,xx,yy-.1,3.48,bulb);}}
+    this.wire(g,points);
+    const glow=new THREE.PointLight('#ffb85b',22,13,2);glow.position.set(0,2,5);g.add(glow);
+    for(const xx of [-3.8,3.8]){this.sphere(g,1.1,xx,.15,3.5,m.snow).scale.set(1,.35,1);}
+    return g;
+  }
+  tree(angle,r,height){const group=new THREE.Group();group.position.set(-Math.sin(angle)*r,0,Math.cos(angle)*r);group.userData.kind='distant-tree';this.scene.add(group);const m=this.materials;this.mesh(new THREE.CylinderGeometry(.16,.23,1.7,7),m.wood,group,0,.7,0);for(let i=0;i<4;i++){const y=height*(.27+i*.19),size=height*(.29-i*.045);this.mesh(new THREE.ConeGeometry(size,height*.48,10),m.pine,group,0,y,0);this.mesh(new THREE.ConeGeometry(size*.8,height*.35,10),m.snow,group,0,y+height*.09,0);}}
+  lantern(angle,r){const g=new THREE.Group();g.position.set(-Math.sin(angle)*r,0,Math.cos(angle)*r);this.scene.add(g);const m=this.materials;this.mesh(new THREE.CylinderGeometry(.06,.1,3.2,8),m.wood,g,0,1.6,0);this.box(g,.5,.7,.5,0,3.2,0,m.light);this.mesh(new THREE.ConeGeometry(.45,.25,4),m.roof,g,0,3.7,0);this.mesh(new THREE.ConeGeometry(.45,.1,4),m.snow,g,0,3.82,0);for(const xx of [-.25,.25])for(const zz of [-.25,.25])this.box(g,.04,.75,.04,xx,3.2,zz,m.wood);}
+  gift(parent,x,z,color,size=.6){const m=this.materials;this.box(parent,size,size,size,x,size/2,z,this.material(color));this.box(parent,size*.18,size+.02,size+.03,x,size/2,z,m.gold);this.box(parent,size+.03,.12,size+.03,x,size*.65,z,m.gold);for(const side of [-1,1]){const bow=this.mesh(new THREE.TorusGeometry(size*.16,.04,6,12),m.gold,parent,x+side*size*.12,size+.06,z);bow.rotation.x=Math.PI/2;}}
+  build(){const m=this.materials;
+    const ground=this.mesh(new THREE.PlaneGeometry(180,180,24,24).rotateX(-Math.PI/2),m.snow,this.scene);ground.receiveShadow=true;ground.castShadow=false;
+    // A recessed cobbled square gives the near houses a believable scale.
+    const plaza=this.mesh(new THREE.PlaneGeometry(13,13,12,12).rotateX(-Math.PI/2),this.material('#637984'),this.scene,0,.015,0);plaza.castShadow=false;
+    const stones=new THREE.InstancedMesh(new THREE.BoxGeometry(.52,.03,.38),this.material('#9baeb4'),500);const dummy=new THREE.Object3D();let n=0;for(let z=-6.5;z<6.5;z+=.5)for(let x=-6.5;x<6.5;x+=.66){if(Math.hypot(x,z)>6.5||n>=500)continue;dummy.position.set(x+(Math.round(z*2)%2)*.22,.04,z);dummy.updateMatrix();stones.setMatrixAt(n++,dummy.matrix);}stones.count=n;stones.instanceMatrix.needsUpdate=true;stones.receiveShadow=true;this.scene.add(stones);
+    this.house(0,14,'#7a4844','NOEL • BAKERY');this.house(1.5,14,'#53665c','GIFT ATELIER');this.house(3,15,'#695775','WINTER HOUSE');this.house(4.6,14,'#496172','CHRISTMAS POST');
+    for(let i=0;i<65;i++)this.tree(i/65*Math.PI*2,32+(i%5)*3,5+(i%4)*1.1);
+    for(const a of [-.8,.55,1.95,2.65,3.65,5.35])this.lantern(a,8.8);
+    // Wrapped presents, ribbons and red berry planters enliven the nearby porches.
+    for(let i=0;i<10;i++){const a=1.5+(i%3-.8)*.09;this.gift(this.scene,-Math.sin(a)*(9.8+i%2),Math.cos(a)*(9.8+i%2),['#963d48','#365d4a','#bc9761'][i%3],.45+i%3*.18);}
+    for(let i=0;i<4;i++)this.gift(this.scene,1.2+i*.45,9.4+(i%2)*.7,['#8f3345','#285745','#ad8353','#563f65'][i],.5+i%2*.18);
+    const snowman=new THREE.Group();snowman.position.set(-3.4,0,10.5);this.scene.add(snowman);
+    this.sphere(snowman,.58,0,.55,0,m.snow);this.sphere(snowman,.43,0,1.3,0,m.snow);this.sphere(snowman,.3,0,1.95,0,m.snow);
+    const red=this.material('#a53543'),coal=this.material('#232c2e');this.mesh(new THREE.CylinderGeometry(.43,.43,.14,16),red,snowman,0,1.62,0);this.box(snowman,.16,.5,.08,.21,1.37,-.38,red);
+    for(const xx of [-.1,.1])this.sphere(snowman,.037,xx,2.01,-.28,coal);for(const yy of [1.15,1.35,1.52])this.sphere(snowman,.04,0,yy,-.4,coal);
+    const carrot=this.mesh(new THREE.ConeGeometry(.065,.28,8),this.material('#d5853f'),snowman,0,1.91,-.35);carrot.rotation.x=-Math.PI/2;
+    this.mesh(new THREE.ConeGeometry(.32,.5,16),red,snowman,0,2.42,0);this.mesh(new THREE.CylinderGeometry(.33,.33,.12,16),m.snow,snowman,0,2.18,0);this.sphere(snowman,.09,0,2.67,0,m.snow);
+    const moon=this.mesh(new THREE.SphereGeometry(2.2,24,16),new THREE.MeshBasicMaterial({color:'#ede8c9'}),this.scene,-32,34,-45);moon.castShadow=false;
+    let seed=42;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+    const stars=[];for(let i=0;i<750;i++){const a=random()*Math.PI*2,y=12+random()*65,r=70;stars.push(-Math.sin(a)*r,y,Math.cos(a)*r);}const starGeom=new THREE.BufferGeometry();starGeom.setAttribute('position',new THREE.Float32BufferAttribute(stars,3));this.scene.add(new THREE.Points(starGeom,new THREE.PointsMaterial({color:'#ddd8c1',size:.09,sizeAttenuation:true})));
+    const snow=[];for(let i=0;i<320;i++)snow.push((random()-.5)*46,1+random()*17,(random()-.5)*46);const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(snow,3));this.snow=new THREE.Points(sg,new THREE.PointsMaterial({color:'#dbe7ef',size:.045,transparent:true,opacity:.65}));this.scene.add(this.snow);
+    // Large snow banks beyond the square soften the edge of the forest.
+    for(let i=0;i<15;i++){const a=i/15*Math.PI*2;this.sphere(this.scene,5,-Math.sin(a)*28,-2.8,Math.cos(a)*28,m.snow).scale.y=.7;}
+  }
+  batchScenery(){
+    this.scene.updateMatrixWorld(true);const groups=new Map(),old=[];
+    this.scene.traverse(obj=>{if(!obj.isMesh||obj.isInstancedMesh)return;const key=`${obj.material.uuid}/${obj.castShadow}/${obj.receiveShadow}`;if(!groups.has(key))groups.set(key,{material:obj.material,cast:obj.castShadow,receive:obj.receiveShadow,geometries:[]});const geometry=(obj.geometry.index?obj.geometry.toNonIndexed():obj.geometry.clone()).applyMatrix4(obj.matrixWorld);groups.get(key).geometries.push(geometry);old.push(obj);});
+    for(const mesh of old)mesh.removeFromParent();for(const group of groups.values()){const geometry=mergeGeometries(group.geometries);const mesh=new THREE.Mesh(geometry,group.material);mesh.castShadow=group.cast;mesh.receiveShadow=group.receive;this.scene.add(mesh);for(const g of group.geometries)g.dispose();}
   }
   set(yaw,pitch=this.pitch){this.yaw=yaw;this.pitch=Math.max(-Math.PI*.47,Math.min(Math.PI*.47,pitch));this.render();}
-  render(){
-    const w=this.viewport.clientWidth,h=this.viewport.clientHeight;if(!w||!h)return;
-    if(this.gl){const d=Math.min(devicePixelRatio||1,1.5);const rw=Math.round(w*d),rh=Math.round(h*d);if(this.canvas.width!==rw||this.canvas.height!==rh){this.canvas.width=rw;this.canvas.height=rh;}const g=this.gl;g.viewport(0,0,this.canvas.width,this.canvas.height);g.uniform1f(this.uniforms.yaw,this.yaw);g.uniform1f(this.uniforms.pitch,this.pitch);g.uniform1f(this.uniforms.aspect,w/h);g.drawArrays(g.TRIANGLES,0,6);}
-    if(this.context){
-      const rw=240,rh=Math.round(240*h/w);this.canvas.width=rw;this.canvas.height=rh;const frame=this.context.createImageData(rw,rh),src=this.pixels;
-      const cp=Math.cos(this.pitch),sp=Math.sin(this.pitch),cy=Math.cos(this.yaw),sy=Math.sin(this.yaw);
-      for(let j=0;j<rh;j++)for(let i=0;i<rw;i++){
-        const vx=(2*(i+.5)/rw-1)*w/h*.7,vy=(1-2*(j+.5)/rh)*.7,l=Math.hypot(vx,vy,1);
-        const px=vx/l,py=(vy*cp+sp)/l,pz=(cp-vy*sp)/l;
-        const u=((Math.atan2(px*cy+pz*sy,pz*cy-px*sy)/(2*Math.PI)+.5)%1+1)%1,v=.5-Math.asin(py)/Math.PI;
-        const from=(Math.min(src.height-1,Math.floor(v*src.height))*src.width+Math.floor(u*src.width))*4,to=(j*rw+i)*4;
-        frame.data[to]=src.data[from];frame.data[to+1]=src.data[from+1];frame.data[to+2]=src.data[from+2];frame.data[to+3]=255;
-      }this.context.putImageData(frame,0,0);
-    }
-    const delta=1.15-this.yaw;const dx=Math.sin(delta),z=Math.cos(delta),y=.03;const cy=Math.cos(this.pitch),sy=Math.sin(this.pitch),vy=y*cy-z*sy,vz=z*cy+y*sy;
-    const visible=vz>0;const px=visible?w/2+dx/vz*h/1.4:w+200,py=visible?h/2-vy/vz*h/1.4:h/2;
-    this.orb.style.left=`${px-31}px`;this.orb.style.top=`${py-31}px`;this.orb.style.visibility=visible&&px>-100&&px<w+100&&py>-100&&py<h+100?'visible':'hidden';this.onView?.();
+  render(){const w=this.viewport.clientWidth,h=this.viewport.clientHeight;if(!w||!h)return;if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
+    this.camera.lookAt(-Math.sin(this.yaw)*Math.cos(this.pitch),2.8+Math.sin(this.pitch),Math.cos(this.yaw)*Math.cos(this.pitch));this.camera.updateMatrixWorld();this.renderer.render(this.scene,this.camera);this.lastDraw=performance.now();
+    const p=this.hotspot.clone().project(this.camera),visible=p.z<1&&p.z>-1;const x=visible?(p.x+1)*w/2:w+200,y=(1-p.y)*h/2;this.orb.style.left=`${x-31}px`;this.orb.style.top=`${y-31}px`;this.orb.style.visibility=visible&&x>-100&&x<w+100&&y>-100&&y<h+100?'visible':'hidden';this.onView?.();
   }
 }

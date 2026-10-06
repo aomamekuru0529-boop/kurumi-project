@@ -71,7 +71,7 @@ $('#startBtn').onclick=()=>{show('worldScreen','world');initialPan();focus(viewp
 function goToWorkshop(){
   if(!state.found||state.traveling||state.phase!=='world')return;state.traveling=true;$('#fairySpeech').textContent='じゃあ、ついてきて！';$('#tapLabel').style.display='none';$('#tapRing').style.display='none';
   const start=state.view,target=viewport.clientWidth*2.2/viewScale(),t0=performance.now(),duration=reduced.matches?0:1700;
-  function frame(t){if(state.phase!=='world')return;const p=duration?Math.min(1,(t-t0)/duration):1;setView(start+(target-start)*(1-(1-p)**3));if(p<1)requestAnimationFrame(frame);else later(()=>{state.traveling=false;show('workshopScreen','quiz');renderQuestion();},250);}
+  let lastTravelFrame=-Infinity;function frame(t){if(state.phase!=='world')return;const p=duration?Math.min(1,(t-t0)/duration):1;if(t-lastTravelFrame>=80||p===1){setView(start+(target-start)*(1-(1-p)**3));lastTravelFrame=t;}if(p<1)requestAnimationFrame(frame);else later(()=>{state.traveling=false;show('workshopScreen','quiz');renderQuestion();},250);}
   requestAnimationFrame(frame);
 }
 orb.onclick=goToWorkshop;orb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goToWorkshop();}});
