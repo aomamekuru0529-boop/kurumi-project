@@ -112,12 +112,33 @@ for(const event of ['pointerup','pointercancel','lostpointercapture'])stroke.add
 let lastStrokeKey=null;stroke.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();if(!e.repeat&&e.key!==lastStrokeKey){lastStrokeKey=e.key;addStroke(250);}}});
 function transformFairy(){show('workshopScreen','transform');$('#flash').classList.add('go');later(()=>{$('#flash').classList.remove('go');show('transformScreen','profile');mountFairy('#evolvedFairy',state.type);mountFairy('#combinedFairyVisual',state.type);$('#evolvedFairy').className='evolved-fairy reveal';for(const prefix of ['fairyInfo','combined']){ $(`#${prefix}Title`).textContent=`${state.type.label}タイプ「${state.type.name}」`;$(`#${prefix}Desc`).textContent=state.type.desc;$(`#${prefix}Wish`).textContent=state.type.wish;$(`#${prefix}Strengths`).textContent=state.type.strengths;}$('#fairyInfoCard').classList.add('show');focus($('#fairyInfoTitle'));announce(`あなたは${state.type.label}タイプ、${state.type.name}です。`);prepareExport();},700);}
 function magicParticles(container,count){container.replaceChildren();for(let i=0;i<count;i++){const star=document.createElement('i');star.className='magic-star fly';star.style.left='50%';star.style.top='40%';star.style.setProperty('--sx',`${(Math.random()-.5)*700}px`);star.style.setProperty('--sy',`${(Math.random()-.5)*600}px`);star.style.animationDelay=`${Math.random()*1.5}s`;container.append(star);}}
-$('#fairyInfoNext').onclick=()=>{if(state.phase!=='profile')return;show('transformScreen','magic');mountFairy('#magicFairyClone',state.type);$('#magicFullscreen').classList.add('active');$('#magicFairyClone').className='evolved-fairy reveal spin-cast cast';$('#magicRing').className='magic-ring go';magicParticles($('#magicStarfield'),reduced.matches?0:64);announce('妖精が感謝の魔法をかけています。');later(()=>{$('#magicFullscreen').classList.remove('active');show('transformScreen','gratitude');$('#evolvedFairy').className='evolved-fairy handoff-visible handing';$('#gratitudeCard').className='gratitude-card handoff materialize';focus($('#gratitudeTitle'));announce('妖精から感謝のカードが届きました。');},6500);};
+$('#fairyInfoNext').onclick=()=>{
+  if(state.phase!=='profile')return;
+  show('transformScreen','magic');mountFairy('#magicFairyClone',state.type);
+  $('.magic-copy').textContent='妖精が、感謝の魔法をかけています…';
+  $('#magicFullscreen').classList.add('active');$('#magicFairyClone').className='evolved-fairy reveal spin-cast cast';
+  $('#magicFairyFloat').classList.remove('offering');$('#offeredCard').className='offered-card';
+  $('#magicRing').className='magic-ring go';magicParticles($('#magicStarfield'),reduced.matches?0:64);
+  announce('妖精が舞いながら、感謝の魔法をかけています。');
+  later(beginCardHandoff,6500);
+};
+function beginCardHandoff(){
+  show('transformScreen','handoff');$('#magicFairyClone').className='evolved-fairy reveal';
+  $('#magicFairyFloat').classList.add('offering');$('#offeredCard').classList.add('appear');
+  $('.magic-copy').textContent='妖精から、あなたへ。';announce('妖精が感謝のカードを差し出しています。');
+  later(()=>{$('#offeredCard').classList.add('deliver');},1000);
+  later(()=>{
+    $('#magicFullscreen').classList.remove('active');show('transformScreen','gratitude');
+    $('#evolvedFairy').className='evolved-fairy handoff-visible handing';
+    $('#gratitudeCard').className='gratitude-card handoff materialize';focus($('#gratitudeTitle'));
+    announce('妖精から感謝のカードが届きました。');
+  },2400);
+}
 $('#gratitudeNext').onclick=()=>{if(state.phase!=='gratitude')return;show('transformScreen','combined');$('#combinedCard').classList.add('show');$('#combinedActions').classList.add('show');focus($('#combinedTitle'));announce('カードが完成しました。保存、シェア、再診断ができます。');};
 function reset(){
   cancelTimers();state.answers=[];state.found=false;state.traveling=false;state.drag=null;state.strokeTime=0;state.strokeDown=false;state.strokeLast=null;state.gyroBase=null;state.exportBlob=null;exportPromise=null;lastStrokeKey=null;
   for(const id of ['#fairyInfoCard','#gratitudeCard','#combinedCard']){const e=$(id);e.classList.remove('show','handoff','materialize');e.removeAttribute('style');}
-  $('#combinedActions').classList.remove('show');$('#magicFullscreen').classList.remove('active');$('#flash').classList.remove('go');$('#strokeWrap').style.display='none';$('#strokeBar').style.width='0';$('#strokeWrap').style.removeProperty('--power-progress');$('#powerBurst').classList.remove('active');$('.workshop-room').inert=false;$('#quizWrap').hidden=false;$('#gift').className='gift';$('#gift').removeAttribute('style');$('#gift').innerHTML=giftSvg([]);$('.workshop-bubble').innerHTML='あなたのこと、<br>少しだけ教えて！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='none';$('#particles').replaceChildren();$('#magicStarfield').replaceChildren();orb.tabIndex=-1;$('.hint').textContent='周りを見渡してみて';show('worldScreen','world');initialPan();focus(viewport);announce('もう一度、妖精を探しましょう。');
+  $('#offeredCard').className='offered-card';$('#magicFairyFloat').classList.remove('offering');$('.magic-copy').textContent='妖精が、感謝の魔法をかけています…';$('#combinedActions').classList.remove('show');$('#magicFullscreen').classList.remove('active');$('#flash').classList.remove('go');$('#strokeWrap').style.display='none';$('#strokeBar').style.width='0';$('#strokeWrap').style.removeProperty('--power-progress');$('#powerBurst').classList.remove('active');$('.workshop-room').inert=false;$('#quizWrap').hidden=false;$('#gift').className='gift';$('#gift').removeAttribute('style');$('#gift').innerHTML=giftSvg([]);$('.workshop-bubble').innerHTML='あなたのこと、<br>少しだけ教えて！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='none';$('#particles').replaceChildren();$('#magicStarfield').replaceChildren();orb.tabIndex=-1;$('.hint').textContent='周りを見渡してみて';show('worldScreen','world');initialPan();focus(viewport);announce('もう一度、妖精を探しましょう。');
 }
 $('#retryBtn').onclick=reset;
 function prepareExport(){const type=state.type;exportPromise=renderCard(type,config,shareUrl(config.publicUrl,location.href)).then(blob=>{if(state.type===type)state.exportBlob=blob;return blob;}).catch(error=>{console.warn('Card export unavailable:',error.message);return null;});}
