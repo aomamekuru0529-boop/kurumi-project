@@ -20,7 +20,6 @@ export function giftSvg(answers, { open=false, sparkles=false, opening=false, cl
     <radialGradient id="gift-light"><stop stop-color="#fff5c1" stop-opacity=".9"/><stop offset="1" stop-color="#ffd56e" stop-opacity="0"/></radialGradient>
     <clipPath id="gift-front"><path d="M28 94L163 94L163 187L28 187Z"/></clipPath>
   </defs>
-  <ellipse cx="111" cy="196" rx="91" ry="12" fill="#251b18" opacity=".25"/>
   <path d="M28 94L163 94L195 76L60 76Z" fill="#645347"/>
   <path d="M39 93L157 93L182 80L64 80Z" fill="#342923"/>
   ${shimmer?`<ellipse cx="108" cy="86" rx="67" ry="43" fill="url(#gift-light)" class="gift-inner-light"/>${[[-32,-3],[1,-9],[29,-1],[-17,-23],[17,-31]].map(([x,y],i)=>`<path class="gift-sparkle" style="animation-delay:${i*.24}s" d="M${108+x} ${83+y-6}l2 4 4 2-4 2-2 4-2-4-4-2 4-2Z" fill="#fff3be"/>`).join('')}`:''}
