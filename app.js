@@ -1,3 +1,4 @@
+import { Tour } from './tour.js';
 import { config } from './config.js';
 import { types, questions, resultIndex, shareUrl } from './experience.js';
 import { fairySvg } from './fairy.js';
@@ -32,25 +33,33 @@ async function toggleSound(){try{await music.setEnabled(!music.enabled);}catch{t
 for(const id of ['#soundBtn','#soundBtn2','#soundBtn3'])$(id).onclick=toggleSound;
 document.addEventListener('visibilitychange',()=>{if(document.hidden)music.stop();else if(music.enabled)void music.setEnabled(true).catch(()=>{music.enabled=false;syncSound()});});
 
-const viewport=$('#viewport'),world=$('#world'),orb=$('#fairyOrb');
-function maxPan(){return Math.max(0,world.offsetWidth-viewport.clientWidth);}
-function setView(x){state.view=Math.max(0,Math.min(maxPan(),x));world.style.transform=`translateX(${-state.view}px)`;checkFairy();}
-function initialPan(){
-  orb.style.left='';const width=viewport.clientWidth,left=Math.max(orb.offsetLeft,width+80);orb.style.left=`${left}px`;world.style.minWidth=`${left+width}px`;
-  const center=width<=760?1460:1680;setView(Math.min(Math.max(0,center-width/2),left-width-80));state.gyroBase=null;
-}
+const viewport=$('#viewport'),orb=$('#fairyOrb');
+const tour=new Tour(viewport,orb,()=>checkFairy());
+function viewScale(){return 2*Math.atan(viewport.clientWidth/viewport.clientHeight*.7);}
+function setView(x){state.view=x;tour.set(x/viewport.clientWidth*viewScale());}
+function initialPan(){state.view=0;tour.set(0,0);state.gyroBase=null;}
 function checkFairy(){
   if(state.phase!=='world'||state.found)return;
   const r=orb.getBoundingClientRect(),width=viewport.clientWidth;
-  if(r.right>width*.15&&r.left<width*.85){state.found=true;orb.tabIndex=0;$('#fairySpeech').textContent='あ、見つけてくれた！ 待ってたよ！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='block';$('.hint').textContent='妖精をタップしてみて';announce('妖精を見つけました。妖精をタップして工房へ進みましょう。');}
+  if(orb.style.visibility==='visible'&&r.right>width*.15&&r.left<width*.85&&r.top>80&&r.bottom<viewport.clientHeight-120){state.found=true;orb.tabIndex=0;$('#fairySpeech').textContent='あ、見つけてくれた！ 待ってたよ！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='block';$('.hint').textContent='妖精をタップしてみて';announce('妖精を見つけました。妖精をタップして工房へ進みましょう。');}
 }
-viewport.addEventListener('pointerdown',e=>{if(state.traveling||state.phase!=='world'||e.target.closest('#fairyOrb'))return;state.drag={x:e.clientX,view:state.view};viewport.setPointerCapture(e.pointerId);});
-viewport.addEventListener('pointermove',e=>{if(state.drag)setView(state.drag.view+(state.drag.x-e.clientX)*1.15);});
+viewport.addEventListener('pointerdown',e=>{if(state.traveling||state.phase!=='world'||e.target.closest('#fairyOrb'))return;state.drag={x:e.clientX,y:e.clientY,view:state.view,pitch:tour.pitch};viewport.setPointerCapture(e.pointerId);});
+viewport.addEventListener('pointermove',e=>{if(state.drag){state.view=state.drag.view+(state.drag.x-e.clientX)*1.15;tour.set(state.view/viewport.clientWidth*viewScale(),state.drag.pitch+(e.clientY-state.drag.y)/viewport.clientHeight*1.4);}});
 for(const event of ['pointerup','pointercancel','lostpointercapture'])viewport.addEventListener(event,()=>{state.drag=null;state.gyroBase=null;});
 function pan(amount){if(state.phase==='world'&&!state.traveling){setView(state.view+amount);state.gyroBase=null;}}
 $('#lookLeft').onclick=()=>pan(-viewport.clientWidth*.55);$('#lookRight').onclick=()=>pan(viewport.clientWidth*.55);
-viewport.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();pan((e.key==='ArrowRight'?1:-1)*viewport.clientWidth*.3);}});
-function onOrientation(e){if(!state.gyro||state.phase!=='world'||state.traveling||state.drag||typeof e.gamma!=='number')return;if(state.gyroBase===null){state.gyroBase=e.gamma;state.gyroView=state.view;}setView(state.gyroView+(e.gamma-state.gyroBase)*18);}
+viewport.addEventListener('keydown',e=>{if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(e.key==='ArrowRight'||e.key==='ArrowLeft')pan((e.key==='ArrowRight'?1:-1)*viewport.clientWidth*.3);else{tour.set(tour.yaw,tour.pitch+(e.key==='ArrowUp'?1:-1)*.22);state.gyroBase=null;}}});
+const angleDelta=(a,b)=>((a-b+540)%360)-180;
+function onOrientation(e){
+  if(!state.gyro||state.phase!=='world'||state.traveling||state.drag)return;
+  if(![e.alpha,e.beta,e.gamma].some(v=>typeof v==='number'&&Number.isFinite(v)))return;
+  const current={alpha:e.alpha??0,beta:e.beta??0,gamma:e.gamma??0};
+  if(state.gyroBase===null){state.gyroBase={...current,yaw:tour.yaw,pitch:tour.pitch};return;}
+  const base=state.gyroBase,screenAngle=(screen.orientation?.angle??window.orientation??0)*Math.PI/180;
+  const beta=angleDelta(current.beta,base.beta),gamma=angleDelta(current.gamma,base.gamma);
+  const yaw=base.yaw+(-angleDelta(current.alpha,base.alpha)+gamma*Math.cos(screenAngle)+beta*Math.sin(screenAngle))*Math.PI/180;
+  state.view=yaw/viewScale()*viewport.clientWidth;tour.set(yaw,base.pitch+(beta*Math.cos(screenAngle)-gamma*Math.sin(screenAngle))*Math.PI/180);
+}
 window.addEventListener('deviceorientation',onOrientation);
 $('#gyroBtn').onclick=async()=>{
   if(state.gyro){state.gyro=false;}else{
@@ -58,10 +67,10 @@ $('#gyroBtn').onclick=async()=>{
   }
   $('#gyroBtn').setAttribute('aria-pressed',String(state.gyro));$('#gyroBtn').textContent=state.gyro?'傾き操作：オン':'傾き操作を使う';
 };
-$('#startBtn').onclick=()=>{show('worldScreen','world');initialPan();focus(viewport);announce('左右に見渡して妖精を探してください。');if($('#soundOptIn').checked)void toggleSound();};
+$('#startBtn').onclick=()=>{show('worldScreen','world');initialPan();focus(viewport);announce('上下左右に見渡して妖精を探してください。');if($('#soundOptIn').checked)void toggleSound();};
 function goToWorkshop(){
   if(!state.found||state.traveling||state.phase!=='world')return;state.traveling=true;$('#fairySpeech').textContent='じゃあ、ついてきて！';$('#tapLabel').style.display='none';$('#tapRing').style.display='none';
-  const start=state.view,target=Math.min(maxPan(),$('.workshop').offsetLeft-viewport.clientWidth*.6),t0=performance.now(),duration=reduced.matches?0:1700;
+  const start=state.view,target=viewport.clientWidth*2.2/viewScale(),t0=performance.now(),duration=reduced.matches?0:1700;
   function frame(t){if(state.phase!=='world')return;const p=duration?Math.min(1,(t-t0)/duration):1;setView(start+(target-start)*(1-(1-p)**3));if(p<1)requestAnimationFrame(frame);else later(()=>{state.traveling=false;show('workshopScreen','quiz');renderQuestion();},250);}
   requestAnimationFrame(frame);
 }
@@ -180,7 +189,8 @@ $('#shareBtn').onclick=()=>busy($('#shareBtn'),async()=>{
   else{try{await navigator.clipboard.writeText(url);downloadBlob(await getExport(),`christmas-fairy-${state.type.id}.png`);toast('カードを保存し、URLをコピーしました。');}catch{$('#shareUrl').value=url;$('#shareDialog').showModal();focus($('#shareUrl'));$('#shareUrl').select();}}
 });
 $('#closeShare').onclick=()=>$('#shareDialog').close();$('#downloadFallback').onclick=()=>$('#saveBtn').click();
-window.addEventListener('resize',()=>{if(state.phase==='world'&&!state.traveling){if(!state.found)initialPan();else setView(state.view);}});
+window.addEventListener('resize',()=>{state.view=tour.yaw/viewScale()*viewport.clientWidth;state.gyroBase=null;tour.render();});
+window.addEventListener('orientationchange',()=>{state.gyroBase=null;});
 for(let i=0;i<16;i++){const mote=document.createElement('i');mote.textContent=i%3?'✦':'✧';mote.style.setProperty('--mote-angle',`${i*360/16}deg`);mote.style.setProperty('--mote-delay',`${i*.19}s`);$('#thankYouMotes').append(mote);}
 for(let i=0;i<34;i++){const dot=document.createElement('i');dot.style.left=`${Math.random()*100}%`;dot.style.top=`${Math.random()*100}%`;$('.ornaments').append(dot);}
 show('intro','intro');syncSound();

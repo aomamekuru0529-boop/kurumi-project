@@ -77,3 +77,17 @@ test('answers separately add inner sparkles, paper color, satin color and foil d
  await page.locator('.option').nth(2).click();const satinColor=await satin();assert.notEqual(satinColor,initialSatin);assert(await page.locator('#gift .gift-ribbon').isVisible());assert(await page.locator('#gift .gift-bow').isVisible());assert.equal(await color(),paperColor);await page.clock.runFor(2400);
  await page.locator('.option').nth(3).click();assert.equal(await color(),paperColor);assert.equal(await satin(),satinColor);assert(await page.locator('#gift g[clip-path] path').count()>0);assert(await page.locator('#gift .gift-festive').isVisible());assert.equal(await page.locator('#gift .gift-lid').getAttribute('transform'),'translate(0 0)');assert.equal(await page.locator('#gift text').count(),0);await page.clock.runFor(500);await page.screenshot({path:'test-results/gift-complete-mobile.png'});assert.deepEqual(errors,[]);await page.close();
 });
+
+test('spherical tour looks vertically and returns to the same view after a full gyro turn',async()=>{
+ const {page,errors}=await open(390);await page.locator('#startBtn').click();await page.clock.runFor(100);
+ const canvas=page.locator('.tour-canvas');assert(await canvas.isVisible());const shot=()=>page.screenshot({clip:{x:0,y:80,width:390,height:600}});
+ const start=await shot();await page.locator('#viewport').focus();await page.keyboard.press('ArrowUp');const up=await shot();assert.notDeepEqual(up,start);await page.keyboard.press('ArrowDown');assert.deepEqual(await shot(),start);
+ await page.evaluate(()=>{window.DeviceOrientationEvent=class extends Event{static requestPermission(){return Promise.resolve('granted')}}});await page.locator('#gyroBtn').click();
+ const orientation=async(alpha,beta=0,gamma=0)=>page.evaluate(({alpha,beta,gamma})=>{const e=new Event('deviceorientation');Object.assign(e,{alpha,beta,gamma});window.dispatchEvent(e);},{alpha,beta,gamma});
+ await orientation(0);await orientation(90);assert.notDeepEqual(await shot(),start);await orientation(180);await orientation(270);await orientation(360);assert.deepEqual(await shot(),start);
+ await orientation(360,30);assert.notDeepEqual(await shot(),start);await page.screenshot({path:'test-results/tour-mobile.png'});await page.locator('#gyroBtn').click();const stopped=await shot();await orientation(120,0);assert.deepEqual(await shot(),stopped);assert.deepEqual(errors,[]);await page.close();
+});
+
+test('tour remains navigable without WebGL and when sensor permission is denied',async()=>{
+ const {page,errors}=await open(390);await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return kind==='webgl'?null:original.call(this,kind,...args);};window.DeviceOrientationEvent=class extends Event{static requestPermission(){return Promise.resolve('denied')}};});await page.reload();await page.locator('#startBtn').click();await page.clock.runFor(100);assert(await page.locator('.tour-canvas').isVisible());await page.locator('#gyroBtn').click();assert.equal(await page.locator('#gyroBtn').getAttribute('aria-pressed'),'false');assert(await page.locator('#toast').textContent());await page.locator('#lookRight').click();await page.locator('#lookRight').click();await page.locator('#lookRight').click();assert.equal(await page.locator('#fairyOrb').getAttribute('tabindex'),'0');assert.deepEqual(errors,[]);await page.close();
+});
