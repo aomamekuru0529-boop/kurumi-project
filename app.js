@@ -97,7 +97,7 @@ function releaseThankYouPower(){
   const burst=$('#powerBurst');burst.style.setProperty('--power-x',`${r.left+r.width/2}px`);burst.style.setProperty('--power-y',`${r.top+r.height/2}px`);
   gift.classList.remove('inflate');gift.classList.add('explode');burst.classList.add('active');
   announce('プレゼントが弾け、ありがとうパワーがあふれました。');
-  later(()=>{burst.classList.remove('active');startStrokeStage();},5000,{readable:true});
+  later(()=>{burst.classList.remove('active');startStrokeStage();},3000,{readable:true});
 }
 function startStrokeStage(){show('workshopScreen','stroke');$('#strokeWrap').style.display='flex';$('.workshop-room').inert=true;$('#strokeFairy').setAttribute('aria-valuenow','0');focus($('#strokeFairy'));announce('妖精を左右になでてください。キーボードでは左右の矢印キーを交互に押してください。');}
 function addStroke(ms){if(state.phase!=='stroke')return;state.strokeTime=Math.min(3500,state.strokeTime+ms);$('#strokeWrap').style.setProperty('--power-progress',state.strokeTime/3500);const pct=Math.round(state.strokeTime/3500*100);$('#strokeBar').style.width=`${pct}%`;$('#strokeFairy').setAttribute('aria-valuenow',String(pct));if(pct===100)transformFairy();}
