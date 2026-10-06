@@ -1084,3 +1084,12 @@ body[data-phase="profile"] #evolvedFairy { width:320px;height:320px; }
 .gift-lid.is-closing { animation:giftLidClose .6s ease-in-out both; }
 @keyframes giftLidOpen { from{transform:translateY(0)}to{transform:translateY(-36px)} }
 @keyframes giftLidClose { from{transform:translateY(-36px)}to{transform:translateY(0)} }
+.power-burst p {
+  top:50%;bottom:auto;left:50%;transform:translate(-50%,-50%);
+  width:calc(100% - 40px);max-width:900px;margin:0;
+  font-size:clamp(28px,6vw,64px);font-weight:900;line-height:1.65;
+  color:#54320d;letter-spacing:.04em;
+  text-shadow:0 0 8px #fff,0 0 24px #fff,0 0 50px #fff2c7,0 3px 0 #ffffffaa;
+  z-index:2;
+}
+.power-burst p span { display:block; }
