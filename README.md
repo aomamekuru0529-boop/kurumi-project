@@ -1,1 +1,61 @@
-# kurumi-project
+# kurumi-project — Christmas Fairy Experience
+
+「収まりきらない、ありがとう。」をテーマにしたクリスマスWeb体験。妖精の発見、4問の診断、プレゼント制作、なで操作、成長、紹介カード、魔法、感謝カード、保存・共有までを実装しています。
+
+## Macで操作する
+
+配布用ZIPを解凍し、`index.html` があるフォルダに移動します。ターミナルに `cd `（最後に半角スペース）を入力してフォルダをドラッグし、Enterを押してください。
+
+```bash
+python3 -m http.server 8000
+```
+
+ブラウザで `http://localhost:8000` を開きます。終了は Control + C。最新版のZIPにはビルド済みファイルが入っているため、npmのインストールは不要です。HTMLのダブルクリックではなくHTTPサーバーで開いてください。
+
+## 開発・検証
+
+Node.js 22以降とPython 3を使用します。
+
+```bash
+npm ci
+npm run dev
+npm test
+npm run build
+APP_ROOT=dist npm test
+```
+
+ブラウザテストはシステムの `/usr/bin/chromium`、`CHROMIUM_PATH`、Playwright標準のChromiumの順で使用します。必要な場合は `npx playwright install chromium` を実行してください。
+
+ビルド結果は `dist/`。静的ファイルのみで動作し、サーバー側のAPI・データベース・秘密鍵は不要です。回答を保存・送信せず、アクセス解析も含みません。QRコードも端末内で生成します。
+
+## 公開前の設定
+
+`config.js`（ビルド後は `dist/config.js`）を編集します。
+
+- `companyName`: 正式な会社名。空欄なら省略。
+- `companyLogo`: 同一サイト内の画像パス。空欄なら会社名だけを保存画像に表示。
+- `publicUrl`: 正式なHTTPSの体験URL。未設定ならアクセス中のURLからQRを作ります。ローカルURLのQRは別の端末でのアクセスに使えないため、公開前に設定してください。
+- `companyMessage`: 正式な感謝文。初期値は企画の文面です。
+- `bgmUrl`: 任意の音源パス。空欄ならオリジナルのベルの旋律をWeb Audioで生成します。
+
+画像・音源は `assets/` に入れるとビルド時にコピーされます。SVGの妖精はこのプロジェクトで制作したベクターイラストで、正式なブランド素材を用意する場合は `fairy.js` を差し替えられます。
+
+設定したURLから本物のQRコードを生成します。QR・ロゴ・URLは保存画像にだけ載ります。スマホではWeb Share APIの画像共有を利用し、非対応時はURLコピー＋画像保存、クリップボード不可の場合はコピー用ダイアログに切り替わります。
+
+## 公開
+
+`npm run build` 後の `dist/` の中身を、HTTPSに対応する静的ホスティングへ配置してください。サブディレクトリへの配置にも対応します。公開先へのアップロードはまだ実施していません。
+
+公開後は正式URLから全体験を確認してください。画像ダウンロード・画像共有・ジャイロ許可はiPhone SafariとAndroid Chromeの実機確認が必要です。ローカルのブラウザ自動テストで実機固有の挙動を保証することはできません。
+
+## 実装
+
+- `app.js`: 画面状態・操作・演出・共有。再診断でタイマーと状態をリセット。
+- `experience.js`: 質問・4種類の結果・同点判定。
+- `fairy.js`: オリジナルの妖精SVG。
+- `audio.js`: 明示的に許可した場合の音楽。非表示タブでは停止。
+- `card.js`: 1080×1350 PNG・QR・保存。
+- `vendor/qrcode.js`: qrcode 1.5.4 のブラウザ用バンドル。ライセンスを同梱。
+- `tests/`: 結果判定、全4タイプの一連の操作、QRのデコード、保存・共有・再診断・代替操作の検証。
+
+空間は軽量な2Dパノラマです。Three.jsによる全周3D空間は含みません。古い企画仕様は `SPEC.md` / `spec.json`、初期引き継ぎ文書は `CODEX_PROMPT.md` に保存しています。現在の公開条件は本READMEと `REVIEW.md` を参照してください。

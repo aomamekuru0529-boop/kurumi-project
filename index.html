@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="description" content="妖精を見つけて、あなたらしいクリスマスの贈り物に出会う、小さな感謝の体験。" />
+<meta name="theme-color" content="#102c30" />
+<title>収まりきらない、ありがとう。</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<section id="intro" class="screen intro active">
+  <div class="intro-card">
+    <div class="intro-eyebrow">A LITTLE CHRISTMAS WONDER</div>
+    <div class="logo-star" aria-hidden="true">✦</div>
+    <h1><span>収まりきらない、</span><span>ありがとう。</span></h1>
+    <p class="lead">小さなクリスマスの世界に、あなたへのプレゼントを用意しました。</p>
+    <div class="notice">
+      <span class="pill">約3分の、小さな贈り物</span>
+      <span class="pill">指やマウスで見渡せます</span>
+    </div>
+    <label class="sound-choice"><input type="checkbox" id="soundOptIn" /> ベルの音楽と一緒に楽しむ</label>
+    <button id="startBtn" class="primary">体験をはじめる</button>
+  <p class="intro-footnote">あなたの回答は、この端末の中だけで使われます。</p>
+    <p id="companyName" class="company-name"></p>
+  </div>
+</section>
+
+<section id="worldScreen" class="screen">
+  <div class="topbar"><div class="brand">CHRISTMAS EXPERIENCE</div><button class="iconbtn" id="soundBtn">♪</button></div>
+  <div id="viewport" class="scene-viewport" tabindex="0" role="region" aria-label="クリスマスの世界。左右矢印キー、ドラッグ、左右ボタンで見渡せます">
+    <div id="world" class="world">
+      <div class="moon"></div><div class="mountains"></div><div class="snowbank"></div>
+      <div class="village"><div class="house"></div><div class="house"></div><div class="house"></div></div>
+      <div class="tree t1"></div><div class="tree t2"></div><div class="tree t3"></div><div class="tree t4"></div>
+      <div class="big-tree"></div><div class="star-top">★</div>
+      <div class="ornaments"></div>
+      <div class="workshop"><div class="door"></div><div class="window"></div></div>
+      <div id="fairyOrb" class="fairy-orb" role="button" tabindex="-1" aria-label="妖精をタップ">
+        <span class="hit-area" aria-hidden="true"></span>
+        <span class="cheek"></span><span class="tap-ring" id="tapRing"></span>
+        <div id="fairySpeech" class="speech"></div>
+        <div id="tapLabel" class="tap-label">タップしてみて</div>
+      </div>
+      <div class="snow"></div>
+    </div>
+  </div>
+  <div class="world-controls"><button id="lookLeft" class="iconbtn" aria-label="左を見渡す">←</button><button id="gyroBtn" class="secondary" aria-pressed="false">傾き操作を使う</button><button id="lookRight" class="iconbtn" aria-label="右を見渡す">→</button></div>
+  <div class="hint">周りを見渡してみて</div>
+</section>
+
+<section id="workshopScreen" class="screen workshop-screen">
+  <div class="topbar"><div class="brand">ありがとう工房</div><button class="iconbtn" id="soundBtn2">♪</button></div>
+  <div class="workshop-room">
+    <div class="left-panel">
+      <div class="workbench">
+        <div class="workbench-glow"></div>
+        <div class="back-panel"></div>
+        <div class="garland">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="shelf shelf-top"></div>
+        <div class="shelf shelf-mid"></div>
+<div class="mini-fairy"></div>
+        <div class="workshop-bubble fairy-bubble">あなたのこと、<br>少しだけ教えて！</div>
+        <div class="sparkles"><span>✦</span><span>✧</span><span>✦</span></div>
+        <div class="tabletop"></div>
+        <div class="pedestal"></div>
+        <div id="gift" class="gift">
+          <div class="ribbon-v"></div><div class="ribbon-h"></div>
+          <div id="giftOrnament" class="ornament">✦</div>
+          <div id="giftTag" class="tag">for you</div>
+        </div>
+      </div>
+    </div>
+    <div class="right-panel">
+      <div id="quizWrap">
+        <div class="quiz-progress" aria-hidden="true"><div id="quizProgress"></div></div>
+        <div id="questionNum" class="question-num"></div>
+        <h2 id="questionText" class="question" tabindex="-1"></h2>
+        <div id="options" class="options"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="strokeWrap" class="stroke-wrap fullscreen-stroke">
+    <div class="stroke-copy-top">
+      <div class="question-num">THANK YOU POWER</div>
+      <h2 class="question">妖精が光に包まれている…</h2>
+    </div>
+    <div class="stroke-fairy-area">
+      <div class="stroke-bubble fairy-bubble">なでて！</div>
+      <div id="strokeFairy" class="stroke-fairy" tabindex="0" role="progressbar" aria-label="妖精をなでる。左右矢印キーを交互に押すこともできます" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+    </div>
+    <div class="stroke-progress"><div id="strokeBar" class="stroke-bar"></div></div>
+    <p class="stroke-hint">妖精をゆっくり左右になでてみて<br>キーボードは ← → を交互に</p>
+  </div>
+</section>
+
+
+<section id="transformScreen" class="screen transform-screen">
+  <div class="topbar"><div class="brand">A GIFT FOR YOU</div><button class="iconbtn" id="soundBtn3" aria-label="音をオンにする">♫</button></div>
+  <div class="transform-stage">
+    <div id="evolvedFairy" class="evolved-fairy">
+      <span class="wing l"></span><span class="wing r"></span><span class="eyes"></span><span id="evolvedAcc" class="acc"></span>
+      <span class="wand" aria-hidden="true">✧</span>
+      <span class="wand-trail trail1"></span>
+      <span class="wand-trail trail2"></span>
+      <span class="wand-trail trail3"></span>
+    </div>
+
+    <div id="fairyInfoCard" class="fairy-info-card">
+      <div class="eyebrow">YOUR CHRISTMAS FAIRY</div>
+      <h2 id="fairyInfoTitle" tabindex="-1"></h2>
+      <p id="fairyInfoDesc"></p>
+      <p id="fairyInfoStrengths" class="strengths"></p>
+      <p id="fairyInfoWish" class="wishline"></p>
+      <button id="fairyInfoNext" class="stage-next">次へ</button>
+    </div>
+
+    <div id="handoffCopy" class="handoff-copy fairy-bubble">妖精から、あなたへ。</div>
+    <div id="handoffTrail" class="handoff-trail"></div>
+    <div id="gratitudeCard" class="gratitude-card">
+      <span class="gratitude-holly tl">❦</span>
+      <span class="gratitude-holly br">❦</span>
+      <div class="gratitude-deco"><span>✦</span><span>🎄</span><span>✦</span></div>
+      <div class="eyebrow">WITH GRATITUDE</div>
+      <h2 id="gratitudeTitle" tabindex="-1">今年一年、ありがとうございました。</h2>
+      <p data-company-message>皆さまとご一緒できたことへの感謝を込めて、小さなクリスマス体験をお届けしました。来年もどうぞよろしくお願いいたします。</p>
+      <button id="gratitudeNext" class="stage-next warm">次へ</button>
+    </div>
+
+    <div id="combinedCard" class="combined-card">
+      <div class="combined-fairy-wrap">
+        <div id="combinedFairyVisual" class="combined-fairy-visual">
+          <span class="wing l"></span><span class="wing r"></span><span class="eyes"></span><span id="combinedFairyAcc" class="acc"></span>
+        </div>
+      </div>
+      <div class="eyebrow">A LITTLE CHRISTMAS GIFT FOR YOU</div>
+      <h2 id="combinedTitle" tabindex="-1"></h2>
+      <p id="combinedDesc"></p>
+      <p id="combinedStrengths" class="strengths"></p>
+      <p id="combinedWish" class="wishline"></p>
+      <hr class="combined-divider">
+      <div class="gratitude-deco"><span>✦</span><span>🎄</span><span>✦</span></div>
+      <div class="eyebrow">WITH GRATITUDE</div>
+      <h2>今年一年、ありがとうございました。</h2>
+      <p data-company-message>皆さまとご一緒できたことへの感謝を込めて、小さなクリスマス体験をお届けしました。来年もどうぞよろしくお願いいたします。</p>
+    </div>
+
+    <div id="combinedActions" class="combined-actions">
+      <button class="primary" id="saveBtn">保存する</button>
+      <button class="secondary" id="shareBtn">シェアする</button>
+      <button class="secondary" id="retryBtn">もう一度診断</button>
+    </div>
+  </div>
+
+  <div id="magicFullscreen" class="magic-fullscreen">
+    <div class="magic-orbit"></div>
+    <div id="magicFairyFloat" class="magic-fairy-float">
+      <div id="magicFairyClone" class="evolved-fairy">
+        <span class="wing l"></span><span class="wing r"></span><span class="eyes"></span><span id="magicCloneAcc" class="acc"></span>
+        <span class="wand" aria-hidden="true">✧</span>
+        <span class="wand-trail trail1"></span>
+        <span class="wand-trail trail2"></span>
+        <span class="wand-trail trail3"></span>
+      </div>
+    </div>
+    <div id="magicRing" class="magic-ring"></div>
+    <div id="magicStarfield" class="magic-starfield"></div>
+    <div id="magicBurst" class="magic-burst"></div>
+    <div class="magic-copy">妖精が、感謝の魔法をかけています…</div>
+  </div>
+</section>
+
+
+
+<div id="particles" class="particles"></div>
+<div id="flash" class="flash"></div>
+<div id="toast" class="toast" aria-hidden="true"></div>
+<div id="status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<dialog id="shareDialog" aria-labelledby="shareDialogTitle"><h2 id="shareDialogTitle">カードをシェアする</h2><p>このURLをコピーして送ってください。</p><label for="shareUrl">体験のURL</label><input id="shareUrl" readonly /><div class="dialog-actions"><button id="downloadFallback" class="primary">画像を保存</button><button id="closeShare" class="secondary">閉じる</button></div></dialog>
+<noscript><div class="noscript">この体験にはJavaScriptが必要です。ブラウザの設定で有効にしてください。</div></noscript>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

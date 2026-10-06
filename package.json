@@ -1,0 +1,21 @@
+{
+  "name": "christmas-fairy-experience",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Christmas fairy interactive web experience",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "python3 -m http.server 8000 --bind 127.0.0.1",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "jsqr": "1.4.0",
+    "playwright": "1.56.1",
+    "pngjs": "7.0.0"
+  }
+}
