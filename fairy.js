@@ -1,5 +1,15 @@
 // Original vector artwork; no external images or fonts are needed.
 export function fairySvg(type, id = 'fairy') {
+  if (!type) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="顔のある光の妖精">
+    <defs><radialGradient id="${id}-light"><stop stop-color="#fffde5"/><stop offset=".45" stop-color="#fff1b5"/><stop offset=".65" stop-color="#ffdb75" stop-opacity=".95"/><stop offset=".8" stop-color="#ffd66a" stop-opacity=".3"/><stop offset="1" stop-color="#ffd66a" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="150" cy="150" r="145" fill="url(#${id}-light)"/>
+    <ellipse cx="126" cy="145" rx="6" ry="8" fill="#48372c"/><ellipse cx="174" cy="145" rx="6" ry="8" fill="#48372c"/>
+    <circle cx="124" cy="142" r="2" fill="#fff"/><circle cx="172" cy="142" r="2" fill="#fff"/>
+    <ellipse cx="110" cy="161" rx="11" ry="6" fill="#f4a3a1" opacity=".6"/><ellipse cx="190" cy="161" rx="11" ry="6" fill="#f4a3a1" opacity=".6"/>
+    <path d="M140 169Q150 179 160 169" fill="none" stroke="#805447" stroke-width="3" stroke-linecap="round"/>
+    </svg>`;
+  }
   const c=type?.color || '#f0cc72', a=type?.accent || '#fff3c9', symbol=type?.symbol || '✦';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="${type?.name || '光の妖精'}">
   <defs><radialGradient id="${id}-body" cx="35%" cy="25%"><stop stop-color="#fff5de"/><stop offset=".42" stop-color="${c}"/><stop offset="1" stop-color="${c}"/></radialGradient><linearGradient id="${id}-wing" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".92"/><stop offset="1" stop-color="${a}" stop-opacity=".35"/></linearGradient></defs>
