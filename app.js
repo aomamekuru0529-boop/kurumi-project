@@ -115,7 +115,7 @@ function transformFairy(){
   $('#flash').classList.add('go');later(()=>$('#flash').classList.remove('go'),1500);
   later(()=>{
     show('transformScreen','evolved');mountFairy('#evolvedFairy',state.type);mountFairy('#combinedFairyVisual',state.type);
-    $('#evolvedFairy').className='evolved-fairy center-reveal';
+    $('#evolvedFairy').className='evolved-fairy center-still';
     for(const prefix of ['fairyInfo','combined']){
       $(`#${prefix}Title`).textContent=`${state.type.label}タイプ「${state.type.name}」`;
       $(`#${prefix}Desc`).textContent=state.type.desc;$(`#${prefix}Wish`).textContent=state.type.wish;
@@ -126,8 +126,8 @@ function transformFairy(){
       show('transformScreen','profile');$('#evolvedFairy').className='evolved-fairy move-to-top';
       $('#fairyInfoCard').classList.add('show');focus($('#fairyInfoTitle'));
       announce(`あなたは${state.type.label}タイプ、${state.type.name}です。`);
-    },2000,{readable:true});
-  },1500);
+    },reduced.matches?2000:2950,{readable:true});
+  },550);
 }
 function magicParticles(container,count){container.replaceChildren();for(let i=0;i<count;i++){const star=document.createElement('i');star.className='magic-star fly';star.style.left='50%';star.style.top='40%';star.style.setProperty('--sx',`${(Math.random()-.5)*700}px`);star.style.setProperty('--sy',`${(Math.random()-.5)*600}px`);star.style.animationDelay=`${Math.random()*1.5}s`;container.append(star);}}
 $('#fairyInfoNext').onclick=()=>{
