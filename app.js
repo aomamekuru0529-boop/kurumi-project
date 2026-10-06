@@ -9,7 +9,7 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const music=new Music(config.bgmUrl);
 const state={phase:'intro',answers:[],type:types[0],view:0,found:false,traveling:false,drag:null,gyro:false,gyroBase:null,gyroView:0,strokeTime:0,strokeLast:null,strokeX:null,strokeDown:false,exportBlob:null};
 const timers=new Set();let exportPromise=null,toastTimer=null;
-function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn()},reduced.matches?Math.min(ms,180):ms);timers.add(id);return id;}
+function later(fn,ms,{readable=false}={}){const id=setTimeout(()=>{timers.delete(id);fn()},reduced.matches&&!readable?Math.min(ms,180):ms);timers.add(id);return id;}
 function cancelTimers(){for(const id of timers)clearTimeout(id);timers.clear();}
 function announce(message){$('#status').textContent=message;}
 function toast(message){const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),4000);announce(message);}
@@ -85,7 +85,7 @@ function finishQuiz(){
   later(()=>{
     show('workshopScreen','gift-shake');$('#gift').classList.add('shake');
     $('.workshop-bubble').textContent='何か変…？';announce('プレゼントが揺れています。何か変…？');
-    later(inflateGift,5000);
+    later(inflateGift,5000,{readable:true});
   },1200);
 }
 function inflateGift(){
@@ -97,7 +97,7 @@ function releaseThankYouPower(){
   const burst=$('#powerBurst');burst.style.setProperty('--power-x',`${r.left+r.width/2}px`);burst.style.setProperty('--power-y',`${r.top+r.height/2}px`);
   gift.classList.remove('inflate');gift.classList.add('explode');burst.classList.add('active');
   announce('プレゼントが弾け、ありがとうパワーがあふれました。');
-  later(()=>{burst.classList.remove('active');startStrokeStage();},1400);
+  later(()=>{burst.classList.remove('active');startStrokeStage();},5000,{readable:true});
 }
 function startStrokeStage(){show('workshopScreen','stroke');$('#strokeWrap').style.display='flex';$('.workshop-room').inert=true;$('#strokeFairy').setAttribute('aria-valuenow','0');focus($('#strokeFairy'));announce('妖精を左右になでてください。キーボードでは左右の矢印キーを交互に押してください。');}
 function addStroke(ms){if(state.phase!=='stroke')return;state.strokeTime=Math.min(3500,state.strokeTime+ms);$('#strokeWrap').style.setProperty('--power-progress',state.strokeTime/3500);const pct=Math.round(state.strokeTime/3500*100);$('#strokeBar').style.width=`${pct}%`;$('#strokeFairy').setAttribute('aria-valuenow',String(pct));if(pct===100)transformFairy();}

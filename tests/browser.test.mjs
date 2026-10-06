@@ -27,11 +27,11 @@ async function enter(page){await page.locator('#startBtn').click();await page.cl
  for(let i=0;i<10;i++){await page.locator('#lookRight').click();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}
  assert.equal(await page.locator('#fairyOrb').getAttribute('tabindex'),'0');await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(2300);assert.equal(await page.locator('.option').count(),4);
 }
-async function answer(page,index){for(let i=0;i<4;i++){await page.locator('.option').nth(index).click();await page.clock.runFor(900);}await page.clock.runFor(9500);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');
+async function answer(page,index){for(let i=0;i<4;i++){await page.locator('.option').nth(index).click();await page.clock.runFor(900);}await page.clock.runFor(13500);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');
  await page.locator('#strokeFairy').focus();for(let i=0;i<14;i++)await page.keyboard.press(i%2?'ArrowRight':'ArrowLeft');await page.clock.runFor(1100);assert.equal(await page.locator('body').getAttribute('data-phase'),'profile');}
 for(const [i,width] of [320,390,1280,1920].entries())test(`complete fairy ${i}, viewport ${width}: cards, QR, share, retry`,async()=>{
  const {page,errors}=await open(width);if(i===1)await page.screenshot({path:'test-results/intro-mobile.png'});await enter(page);if(i===1)await page.screenshot({path:'test-results/workshop-mobile.png'});await answer(page,i);
- assert.match(await page.locator('#fairyInfoTitle').textContent(),new RegExp(['キラリ','ポム','トト','モコ'][i]));assert(await page.locator('#fairyInfoStrengths').textContent());if(i===1)await page.screenshot({path:'test-results/profile-mobile.png'});
+ assert.match(await page.locator('#fairyInfoTitle').textContent(),new RegExp(['キラリ','ポム','トト','モコ'][i]));assert(await page.locator('#fairyInfoStrengths').textContent());const fairyWidth=await page.locator('#evolvedFairy').evaluate(e=>parseFloat(getComputedStyle(e).width));assert(fairyWidth>=Math.min(width*.72,280)-1);if(i===1)await page.screenshot({path:'test-results/profile-mobile.png'});
  await page.locator('#fairyInfoNext').click();await page.clock.runFor(3000);assert.equal(await page.locator('body').getAttribute('data-phase'),'magic');assert(await page.locator('#magicFairyClone svg').isVisible());await page.clock.runFor(3800);assert.equal(await page.locator('body').getAttribute('data-phase'),'gratitude');
  if(i===1)await page.screenshot({path:'test-results/gratitude-mobile.png'});await page.locator('#gratitudeNext').click();await page.clock.runFor(1000);assert.equal(await page.locator('body').getAttribute('data-phase'),'combined');await page.locator('#retryBtn').scrollIntoViewIfNeeded();const r=await page.locator('#retryBtn').boundingBox();assert(r.y>=0&&r.y+r.height<=844);if(i===1)await page.screenshot({path:'test-results/result-mobile.png',fullPage:true});
  const pending=page.waitForEvent('download');await page.locator('#saveBtn').click();const download=await pending;assert.equal(await download.failure(),null);const image=PNG.sync.read(await readFile(await download.path()));assert.equal(image.width,1080);assert.equal(image.height,1350);const qr=jsQR(new Uint8ClampedArray(image.data),image.width,image.height);assert.equal(qr?.data,base);
@@ -49,7 +49,7 @@ test('pointer stroke needs sustained movement and discovery works by dragging',a
  const {page,errors}=await open(390);await page.locator('#startBtn').click();
  for(let i=0;i<7;i++){await page.mouse.move(320,650);await page.mouse.down();await page.mouse.move(70,650,{steps:10});await page.mouse.up();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}
  await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(2300);
- for(let i=0;i<4;i++){await page.locator('.option').nth(0).click();await page.clock.runFor(900);}await page.clock.runFor(9500);
+ for(let i=0;i<4;i++){await page.locator('.option').nth(0).click();await page.clock.runFor(900);}await page.clock.runFor(13500);
  const rect=await page.locator('#strokeFairy').boundingBox();await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();
  for(let i=0;i<10;i++)await page.mouse.move(rect.x+rect.width/2+(i%2?30:-30),rect.y+rect.height/2);
  assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');
@@ -65,5 +65,5 @@ test('gift shakes in surprise for five seconds before swelling and releasing pow
  await page.clock.runFor(4700);assert.equal(await page.locator('body').getAttribute('data-phase'),'gift-shake');assert.equal(await page.locator('#gift').evaluate(e=>e.classList.contains('inflate')),false);
  await page.clock.runFor(300);assert.equal(await page.locator('body').getAttribute('data-phase'),'gift-inflate');
  await page.clock.runFor(1200);assert.equal(await page.locator('body').getAttribute('data-phase'),'power');assert(await page.locator('#powerBurst').isVisible());
- await page.clock.runFor(1500);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');assert(await page.locator('#thankYouMotes').isVisible());await page.clock.runFor(5000);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');assert.deepEqual(errors,[]);await page.close();
+ await page.clock.runFor(4500);assert.equal(await page.locator('body').getAttribute('data-phase'),'power');assert(await page.locator('#powerBurst p').isVisible());await page.clock.runFor(600);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');assert(await page.locator('#thankYouMotes').isVisible());await page.clock.runFor(5000);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');assert.deepEqual(errors,[]);await page.close();
 });
