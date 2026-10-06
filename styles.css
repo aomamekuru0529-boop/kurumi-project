@@ -1076,3 +1076,11 @@ body[data-phase="profile"] #evolvedFairy { width:320px;height:320px; }
 @keyframes giftTwinkle { 0%,100%{opacity:.25;transform:translateY(3px) scale(.7)}50%{opacity:1;transform:translateY(-7px) scale(1.1)} }
 @keyframes giftGlow { from{opacity:.5}to{opacity:1} }
 @media(max-width:760px) { .workbench .gift { width:148px;height:148px;left:31%;bottom:12px; }.workbench .pedestal { width:128px;bottom:21px;left:31%; } }
+.gift-ribbon,.gift-bow,.gift-festive { animation:giftDress .65s ease-out both; }
+@keyframes giftDress { from{opacity:0}to{opacity:1} }
+.gift-sparkle { animation:giftFill 1s ease-in-out both; }
+@keyframes giftFill { from{opacity:0;transform:translateY(-36px) scale(.6)}30%{opacity:1}to{opacity:1;transform:translateY(8px) scale(.9)} }
+.gift-lid.is-opening { animation:giftLidOpen .35s ease-out both; }
+.gift-lid.is-closing { animation:giftLidClose .6s ease-in-out both; }
+@keyframes giftLidOpen { from{transform:translateY(0)}to{transform:translateY(-36px)} }
+@keyframes giftLidClose { from{transform:translateY(-36px)}to{transform:translateY(0)} }

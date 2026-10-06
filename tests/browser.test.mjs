@@ -27,7 +27,7 @@ async function enter(page){await page.locator('#startBtn').click();await page.cl
  for(let i=0;i<10;i++){await page.locator('#lookRight').click();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}
  assert.equal(await page.locator('#fairyOrb').getAttribute('tabindex'),'0');await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(2300);assert.equal(await page.locator('.option').count(),4);
 }
-async function answer(page,index){for(let i=0;i<4;i++){await page.locator('.option').nth(index).click();await page.clock.runFor(900);}await page.clock.runFor(13500);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');
+async function answer(page,index){for(let i=0;i<4;i++){await page.locator('.option').nth(index).click();await page.clock.runFor(2400);}await page.clock.runFor(13500);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');
  await page.locator('#strokeFairy').focus();for(let i=0;i<14;i++)await page.keyboard.press(i%2?'ArrowRight':'ArrowLeft');await page.clock.runFor(1100);assert.equal(await page.locator('body').getAttribute('data-phase'),'profile');}
 for(const [i,width] of [320,390,1280,1920].entries())test(`complete fairy ${i}, viewport ${width}: cards, QR, share, retry`,async()=>{
  const {page,errors}=await open(width);if(i===1)await page.screenshot({path:'test-results/intro-mobile.png'});await enter(page);if(i===1)await page.screenshot({path:'test-results/workshop-mobile.png'});await answer(page,i);
@@ -49,7 +49,7 @@ test('pointer stroke needs sustained movement and discovery works by dragging',a
  const {page,errors}=await open(390);await page.locator('#startBtn').click();
  for(let i=0;i<7;i++){await page.mouse.move(320,650);await page.mouse.down();await page.mouse.move(70,650,{steps:10});await page.mouse.up();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}
  await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(2300);
- for(let i=0;i<4;i++){await page.locator('.option').nth(0).click();await page.clock.runFor(900);}await page.clock.runFor(13500);
+ for(let i=0;i<4;i++){await page.locator('.option').nth(0).click();await page.clock.runFor(2400);}await page.clock.runFor(13500);
  const rect=await page.locator('#strokeFairy').boundingBox();await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();
  for(let i=0;i<10;i++)await page.mouse.move(rect.x+rect.width/2+(i%2?30:-30),rect.y+rect.height/2);
  assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');
@@ -58,7 +58,7 @@ test('pointer stroke needs sustained movement and discovery works by dragging',a
 });
 test('gift shakes in surprise for five seconds before swelling and releasing power',async()=>{
  const {page,errors}=await open(390);await enter(page);
- for(let i=0;i<3;i++){await page.locator('.option').nth(0).click();await page.clock.runFor(900);}
+ for(let i=0;i<3;i++){await page.locator('.option').nth(0).click();await page.clock.runFor(2400);}
  await page.locator('.option').nth(0).click();await page.clock.runFor(800);
  assert.equal(await page.locator('body').getAttribute('data-phase'),'gift');
  await page.clock.runFor(1300);assert.equal(await page.locator('body').getAttribute('data-phase'),'gift-shake');assert.equal(await page.locator('.workshop-bubble').textContent(),'何か変…？');
@@ -72,8 +72,8 @@ test('answers separately add inner sparkles, paper color, satin color and foil d
  const color=()=>page.locator('#gift-paper stop').first().getAttribute('stop-color');
  const satin=()=>page.locator('#gift-satin stop').first().getAttribute('stop-color');
  const initialColor=await color(),initialSatin=await satin();
- await page.locator('.option').nth(0).click();assert(await page.locator('#gift .gift-sparkle').count()>0);assert.equal(await color(),initialColor);assert.equal(await satin(),initialSatin);await page.clock.runFor(900);
- await page.locator('.option').nth(1).click();const paperColor=await color();assert.notEqual(paperColor,initialColor);assert.equal(await satin(),initialSatin);await page.clock.runFor(900);
- await page.locator('.option').nth(2).click();const satinColor=await satin();assert.notEqual(satinColor,initialSatin);assert.equal(await color(),paperColor);await page.clock.runFor(900);
- await page.locator('.option').nth(3).click();assert.equal(await color(),paperColor);assert.equal(await satin(),satinColor);assert(await page.locator('#gift g[clip-path] path').count()>0);assert.equal(await page.locator('#gift .gift-lid').getAttribute('transform'),'translate(0 0)');assert.equal(await page.locator('#gift text').count(),0);await page.clock.runFor(500);await page.screenshot({path:'test-results/gift-complete-mobile.png'});assert.deepEqual(errors,[]);await page.close();
+ assert.equal(await page.locator('#gift .gift-ribbon').isVisible(),false);assert.equal(await page.locator('#gift .gift-bow').isVisible(),false);await page.locator('.option').nth(0).click();assert.equal(await page.locator('#gift .gift-lid').getAttribute('transform'),'translate(0 -36)');await page.clock.runFor(500);assert(await page.locator('#gift .gift-sparkle').count()>0);assert.equal(await color(),initialColor);assert.equal(await satin(),initialSatin);await page.clock.runFor(1900);assert.equal(await page.locator('#gift .gift-lid').getAttribute('transform'),'translate(0 0)');
+ await page.locator('.option').nth(1).click();const paperColor=await color();assert.notEqual(paperColor,initialColor);assert.equal(await satin(),initialSatin);await page.clock.runFor(2400);
+ await page.locator('.option').nth(2).click();const satinColor=await satin();assert.notEqual(satinColor,initialSatin);assert(await page.locator('#gift .gift-ribbon').isVisible());assert(await page.locator('#gift .gift-bow').isVisible());assert.equal(await color(),paperColor);await page.clock.runFor(2400);
+ await page.locator('.option').nth(3).click();assert.equal(await color(),paperColor);assert.equal(await satin(),satinColor);assert(await page.locator('#gift g[clip-path] path').count()>0);assert(await page.locator('#gift .gift-festive').isVisible());assert.equal(await page.locator('#gift .gift-lid').getAttribute('transform'),'translate(0 0)');assert.equal(await page.locator('#gift text').count(),0);await page.clock.runFor(500);await page.screenshot({path:'test-results/gift-complete-mobile.png'});assert.deepEqual(errors,[]);await page.close();
 });

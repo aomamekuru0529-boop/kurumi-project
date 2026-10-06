@@ -74,9 +74,14 @@ function renderQuestion(){
 function sparkFrom(el){const r=el.getBoundingClientRect(),g=$('#gift').getBoundingClientRect();for(let i=0;i<(reduced.matches?0:14);i++){const dot=document.createElement('i');dot.className='particle';dot.style.left=`${r.left+r.width/2}px`;dot.style.top=`${r.top+r.height/2}px`;dot.style.setProperty('--dx',`${g.left+g.width/2-r.left-r.width/2}px`);dot.style.setProperty('--dy',`${g.top+g.height/2-r.top-r.height/2}px`);$('#particles').append(dot);later(()=>dot.remove(),900);}}
 function answer(index,el){
   if(state.phase!=='quiz'||el.disabled)return;for(const button of $('#options').children)button.disabled=true;sparkFrom(el);state.answers.push(index);
-  $('#gift').innerHTML=giftSvg(state.answers);
+  const firstAnswer=state.answers.length===1;
+  $('#gift').innerHTML=giftSvg(state.answers,{open:firstAnswer,opening:firstAnswer});
+  if(firstAnswer){
+    later(()=>{$('#gift').innerHTML=giftSvg(state.answers,{open:true,sparkles:true});},350);
+    later(()=>{$('#gift').innerHTML=giftSvg(state.answers,{closing:true});},1500);
+  }
   $('#quizProgress').style.width=`${state.answers.length/questions.length*100}%`;
-  later(()=>{if(state.answers.length<questions.length)renderQuestion();else finishQuiz();},800);
+  later(()=>{if(state.answers.length<questions.length)renderQuestion();else finishQuiz();},firstAnswer?2200:800);
 }
 function finishQuiz(){
   state.type=types[resultIndex(state.answers)];show('workshopScreen','gift');$('#quizWrap').hidden=true;
