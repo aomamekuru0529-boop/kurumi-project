@@ -79,9 +79,28 @@ function answer(index,el){
   $('#quizProgress').style.width=`${state.answers.length/questions.length*100}%`;
   later(()=>{if(state.answers.length<questions.length)renderQuestion();else finishQuiz();},800);
 }
-function finishQuiz(){state.type=types[resultIndex(state.answers)];state.phase='gift';$('#quizWrap').hidden=true;$('.workshop-bubble').innerHTML='できた！<br>あなたへのプレゼント。';later(()=>{$('#gift').classList.add('shake');$('.workshop-bubble').textContent='……あれ？';later(startStrokeStage,900);},2200);}
+function finishQuiz(){
+  state.type=types[resultIndex(state.answers)];show('workshopScreen','gift');$('#quizWrap').hidden=true;
+  $('.workshop-bubble').innerHTML='できた！<br>あなたへのプレゼント。';
+  later(()=>{
+    show('workshopScreen','gift-shake');$('#gift').classList.add('shake');
+    $('.workshop-bubble').textContent='何か変…？';announce('プレゼントが揺れています。何か変…？');
+    later(inflateGift,5000);
+  },1200);
+}
+function inflateGift(){
+  show('workshopScreen','gift-inflate');$('#gift').classList.remove('shake');$('#gift').classList.add('inflate');
+  later(releaseThankYouPower,1200);
+}
+function releaseThankYouPower(){
+  show('workshopScreen','power');const gift=$('#gift'),r=gift.getBoundingClientRect();
+  const burst=$('#powerBurst');burst.style.setProperty('--power-x',`${r.left+r.width/2}px`);burst.style.setProperty('--power-y',`${r.top+r.height/2}px`);
+  gift.classList.remove('inflate');gift.classList.add('explode');burst.classList.add('active');
+  announce('プレゼントが弾け、ありがとうパワーがあふれました。');
+  later(()=>{burst.classList.remove('active');startStrokeStage();},1400);
+}
 function startStrokeStage(){show('workshopScreen','stroke');$('#strokeWrap').style.display='flex';$('.workshop-room').inert=true;$('#strokeFairy').setAttribute('aria-valuenow','0');focus($('#strokeFairy'));announce('妖精を左右になでてください。キーボードでは左右の矢印キーを交互に押してください。');}
-function addStroke(ms){if(state.phase!=='stroke')return;state.strokeTime=Math.min(3500,state.strokeTime+ms);const pct=Math.round(state.strokeTime/3500*100);$('#strokeBar').style.width=`${pct}%`;$('#strokeFairy').setAttribute('aria-valuenow',String(pct));if(pct===100)transformFairy();}
+function addStroke(ms){if(state.phase!=='stroke')return;state.strokeTime=Math.min(3500,state.strokeTime+ms);$('#strokeWrap').style.setProperty('--power-progress',state.strokeTime/3500);const pct=Math.round(state.strokeTime/3500*100);$('#strokeBar').style.width=`${pct}%`;$('#strokeFairy').setAttribute('aria-valuenow',String(pct));if(pct===100)transformFairy();}
 const stroke=$('#strokeFairy');
 stroke.addEventListener('pointerdown',e=>{state.strokeDown=true;state.strokeX=e.clientX;state.strokeLast=performance.now();stroke.setPointerCapture(e.pointerId);});
 stroke.addEventListener('pointermove',e=>{if(!state.strokeDown||state.phase!=='stroke')return;const now=performance.now();if(Math.abs(e.clientX-state.strokeX)>1)addStroke(Math.min(100,now-state.strokeLast));state.strokeX=e.clientX;state.strokeLast=now;});
@@ -94,7 +113,7 @@ $('#gratitudeNext').onclick=()=>{if(state.phase!=='gratitude')return;show('trans
 function reset(){
   cancelTimers();state.answers=[];state.found=false;state.traveling=false;state.drag=null;state.strokeTime=0;state.strokeDown=false;state.strokeLast=null;state.gyroBase=null;state.exportBlob=null;exportPromise=null;lastStrokeKey=null;
   for(const id of ['#fairyInfoCard','#gratitudeCard','#combinedCard']){const e=$(id);e.classList.remove('show','handoff','materialize');e.removeAttribute('style');}
-  $('#combinedActions').classList.remove('show');$('#magicFullscreen').classList.remove('active');$('#flash').classList.remove('go');$('#strokeWrap').style.display='none';$('#strokeBar').style.width='0';$('.workshop-room').inert=false;$('#quizWrap').hidden=false;$('#gift').className='gift';$('#gift').removeAttribute('style');for(const s of ['.ribbon-v','.ribbon-h'])$(s).removeAttribute('style');for(const id of ['#giftOrnament','#giftTag'])$(id).style.opacity='0';$('.workshop-bubble').innerHTML='あなたのこと、<br>少しだけ教えて！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='none';$('#particles').replaceChildren();$('#magicStarfield').replaceChildren();orb.tabIndex=-1;$('.hint').textContent='周りを見渡してみて';show('worldScreen','world');initialPan();focus(viewport);announce('もう一度、妖精を探しましょう。');
+  $('#combinedActions').classList.remove('show');$('#magicFullscreen').classList.remove('active');$('#flash').classList.remove('go');$('#strokeWrap').style.display='none';$('#strokeBar').style.width='0';$('#strokeWrap').style.removeProperty('--power-progress');$('#powerBurst').classList.remove('active');$('.workshop-room').inert=false;$('#quizWrap').hidden=false;$('#gift').className='gift';$('#gift').removeAttribute('style');for(const s of ['.ribbon-v','.ribbon-h'])$(s).removeAttribute('style');for(const id of ['#giftOrnament','#giftTag'])$(id).style.opacity='0';$('.workshop-bubble').innerHTML='あなたのこと、<br>少しだけ教えて！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='none';$('#particles').replaceChildren();$('#magicStarfield').replaceChildren();orb.tabIndex=-1;$('.hint').textContent='周りを見渡してみて';show('worldScreen','world');initialPan();focus(viewport);announce('もう一度、妖精を探しましょう。');
 }
 $('#retryBtn').onclick=reset;
 function prepareExport(){const type=state.type;exportPromise=renderCard(type,config,shareUrl(config.publicUrl,location.href)).then(blob=>{if(state.type===type)state.exportBlob=blob;return blob;}).catch(error=>{console.warn('Card export unavailable:',error.message);return null;});}
@@ -108,5 +127,6 @@ $('#shareBtn').onclick=()=>busy($('#shareBtn'),async()=>{
 });
 $('#closeShare').onclick=()=>$('#shareDialog').close();$('#downloadFallback').onclick=()=>$('#saveBtn').click();
 window.addEventListener('resize',()=>{if(state.phase==='world'&&!state.traveling){if(!state.found)initialPan();else setView(state.view);}});
+for(let i=0;i<16;i++){const mote=document.createElement('i');mote.textContent=i%3?'✦':'✧';mote.style.setProperty('--mote-angle',`${i*360/16}deg`);mote.style.setProperty('--mote-delay',`${i*.19}s`);$('#thankYouMotes').append(mote);}
 for(let i=0;i<34;i++){const dot=document.createElement('i');dot.style.left=`${Math.random()*100}%`;dot.style.top=`${Math.random()*100}%`;$('.ornaments').append(dot);}
 show('intro','intro');syncSound();

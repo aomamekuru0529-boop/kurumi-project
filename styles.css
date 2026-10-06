@@ -1030,3 +1030,33 @@ h2:focus-visible { outline:none; }
   .workbench .pedestal { bottom:18px;width:120px; }
   .workshop-bubble { right:10px;font-size:11px;padding:8px 12px; }
 }
+/* Gift → five seconds of surprise → expansion → thank-you light. */
+.gift.inflate { animation:giftInflate 1.2s ease-in forwards; }
+.gift.explode { animation:giftExplode .5s ease-out forwards; }
+@keyframes giftInflate {
+  0% { transform:translateX(-50%) scale(1);filter:brightness(1); }
+  65% { transform:translateX(-50%) scale(1.32,1.18);filter:brightness(1.3); }
+  100% { transform:translateX(-50%) scale(1.65,1.5);filter:brightness(2); }
+}
+@keyframes giftExplode {
+  from { transform:translateX(-50%) scale(1.65,1.5);opacity:1; }
+  to { transform:translateX(-50%) scale(2.5);opacity:0; }
+}
+.power-burst { display:none;position:fixed;inset:0;z-index:300;pointer-events:none;overflow:hidden;background:radial-gradient(circle at var(--power-x) var(--power-y),#fff9db,#ffdc7e88 30%,transparent 80%); }
+.power-burst.active { display:block;animation:powerVeil 1.4s ease-out both; }
+.power-flare,.power-ring { position:absolute;left:var(--power-x);top:var(--power-y);width:140px;height:140px;transform:translate(-50%,-50%);border-radius:50%; }
+.power-flare { background:radial-gradient(circle,#fffef1,#ffe5a6 45%,#ffd36a00 70%);animation:powerBloom 1.4s ease-out both; }
+.power-ring { border:3px solid #fff1b7;box-shadow:0 0 25px #ffe092;animation:powerBloom 1.1s ease-out both; }
+.power-burst p { position:absolute;bottom:18%;width:100%;text-align:center;color:#4b351a;font-weight:700;font-size:clamp(18px,4vw,28px);text-shadow:0 0 20px #fff; }
+@keyframes powerBloom { 0%{transform:translate(-50%,-50%) scale(.5);opacity:1}100%{transform:translate(-50%,-50%) scale(18);opacity:0} }
+@keyframes powerVeil { 0%{opacity:0}25%,75%{opacity:1}100%{opacity:.85} }
+.thank-you-motes { position:absolute;inset:0;pointer-events:none;z-index:2; }
+.thank-you-motes i { position:absolute;left:50%;top:50%;font-style:normal;font-size:24px;color:#ffe3a0;text-shadow:0 0 15px #ffd778;animation:powerGather 3s var(--mote-delay) ease-in infinite; }
+@keyframes powerGather { 0%{transform:rotate(var(--mote-angle)) translateX(min(43vw,210px)) rotate(calc(-1 * var(--mote-angle))) scale(.65);opacity:0}20%{opacity:1}100%{transform:rotate(var(--mote-angle)) translateX(30px) rotate(calc(-1 * var(--mote-angle))) scale(.25);opacity:0} }
+#strokeWrap { background:radial-gradient(circle at 50% 45%,#ffda7c44,transparent 55%),radial-gradient(circle at 50% 30%,#40546a,#172434 48%,#0a111b); }
+#strokeFairy svg { filter:drop-shadow(0 0 calc(15px + var(--power-progress,0) * 35px) #ffdc88); }
+@media(prefers-reduced-motion:reduce) {
+  .gift.explode { opacity:0; }
+  .power-burst.active { background:#fff0caaa; }
+  .thank-you-motes i { transform:rotate(var(--mote-angle)) translateX(min(35vw,160px)) rotate(calc(-1 * var(--mote-angle)));opacity:.6; }
+}
