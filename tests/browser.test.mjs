@@ -53,8 +53,8 @@ test('pointer stroke needs sustained movement and discovery works by dragging',a
  const rect=await page.locator('#strokeFairy').boundingBox();await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();
  for(let i=0;i<10;i++)await page.mouse.move(rect.x+rect.width/2+(i%2?30:-30),rect.y+rect.height/2);
  assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');
- for(let i=0;i<40;i++){await page.clock.runFor(100);await page.mouse.move(rect.x+rect.width/2+(i%2?30:-30),rect.y+rect.height/2);}
- await page.mouse.up();await page.clock.runFor(1000);assert.equal(await page.locator('body').getAttribute('data-phase'),'profile');assert.deepEqual(errors,[]);await page.close();
+ for(let i=0;i<40;i++){await page.clock.runFor(100);await page.mouse.move(rect.x+rect.width/2+(i%2?30:-30),rect.y+rect.height/2);if(i===19){const progress=await page.locator('#strokeWrap').evaluate(e=>parseFloat(e.style.getPropertyValue('--power-progress')));assert(progress>.4&&progress<1);const glow=await page.locator('#strokeFairy svg').evaluate(e=>getComputedStyle(e).filter);assert(parseFloat(glow.match(/brightness\(([^)]+)/)[1])>1);}}
+ await page.mouse.up();assert(await page.locator('#flash').evaluate(e=>e.classList.contains('go')));await page.clock.runFor(1700);assert.equal(await page.locator('body').getAttribute('data-phase'),'profile');assert.equal(await page.locator('#flash').evaluate(e=>e.classList.contains('go')),false);assert.deepEqual(errors,[]);await page.close();
 });
 test('gift shakes in surprise for five seconds before swelling and releasing power',async()=>{
  const {page,errors}=await open(390);await enter(page);
