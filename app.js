@@ -110,7 +110,25 @@ stroke.addEventListener('pointerdown',e=>{state.strokeDown=true;state.strokeX=e.
 stroke.addEventListener('pointermove',e=>{if(!state.strokeDown||state.phase!=='stroke')return;const now=performance.now();if(Math.abs(e.clientX-state.strokeX)>1)addStroke(Math.min(100,now-state.strokeLast));state.strokeX=e.clientX;state.strokeLast=now;});
 for(const event of ['pointerup','pointercancel','lostpointercapture'])stroke.addEventListener(event,()=>{state.strokeDown=false;state.strokeLast=null;});
 let lastStrokeKey=null;stroke.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();if(!e.repeat&&e.key!==lastStrokeKey){lastStrokeKey=e.key;addStroke(250);}}});
-function transformFairy(){show('workshopScreen','transform');announce('ありがとうパワーが満ちて、妖精が進化します。');$('#flash').classList.add('go');later(()=>$('#flash').classList.remove('go'),1500);later(()=>{show('transformScreen','profile');mountFairy('#evolvedFairy',state.type);mountFairy('#combinedFairyVisual',state.type);$('#evolvedFairy').className='evolved-fairy reveal';for(const prefix of ['fairyInfo','combined']){ $(`#${prefix}Title`).textContent=`${state.type.label}タイプ「${state.type.name}」`;$(`#${prefix}Desc`).textContent=state.type.desc;$(`#${prefix}Wish`).textContent=state.type.wish;$(`#${prefix}Strengths`).textContent=state.type.strengths;}$('#fairyInfoCard').classList.add('show');focus($('#fairyInfoTitle'));announce(`あなたは${state.type.label}タイプ、${state.type.name}です。`);prepareExport();},700);}
+function transformFairy(){
+  show('workshopScreen','transform');announce('ありがとうパワーが満ちて、妖精が進化します。');
+  $('#flash').classList.add('go');later(()=>$('#flash').classList.remove('go'),1500);
+  later(()=>{
+    show('transformScreen','evolved');mountFairy('#evolvedFairy',state.type);mountFairy('#combinedFairyVisual',state.type);
+    $('#evolvedFairy').className='evolved-fairy center-reveal';
+    for(const prefix of ['fairyInfo','combined']){
+      $(`#${prefix}Title`).textContent=`${state.type.label}タイプ「${state.type.name}」`;
+      $(`#${prefix}Desc`).textContent=state.type.desc;$(`#${prefix}Wish`).textContent=state.type.wish;
+      $(`#${prefix}Strengths`).textContent=state.type.strengths;
+    }
+    announce('妖精が進化しました。');prepareExport();
+    later(()=>{
+      show('transformScreen','profile');$('#evolvedFairy').className='evolved-fairy move-to-top';
+      $('#fairyInfoCard').classList.add('show');focus($('#fairyInfoTitle'));
+      announce(`あなたは${state.type.label}タイプ、${state.type.name}です。`);
+    },2000,{readable:true});
+  },1500);
+}
 function magicParticles(container,count){container.replaceChildren();for(let i=0;i<count;i++){const star=document.createElement('i');star.className='magic-star fly';star.style.left='50%';star.style.top='40%';star.style.setProperty('--sx',`${(Math.random()-.5)*700}px`);star.style.setProperty('--sy',`${(Math.random()-.5)*600}px`);star.style.animationDelay=`${Math.random()*1.5}s`;container.append(star);}}
 $('#fairyInfoNext').onclick=()=>{
   if(state.phase!=='profile')return;

@@ -1171,3 +1171,24 @@ body[data-phase="transform"] #strokeWrap { display:flex !important; }
   .workshop-bubble { left:14px;right:auto;top:12px;max-width:calc(100% - 110px); }
 }
 @media(max-width:360px) { .workbench { height:380px; }.workbench .gift { height:304px; } }
+/* Evolution is revealed alone for two seconds, then paired with its profile. */
+body[data-phase="evolved"] #evolvedFairy,
+body[data-phase="profile"] #evolvedFairy {
+  display:block !important;position:fixed !important;left:50% !important;
+  width:320px;height:320px;margin:0 !important;
+  opacity:1;transform:translate(-50%,-50%) !important;
+}
+body[data-phase="evolved"] #evolvedFairy { top:50dvh !important;animation:centerFairyReveal .65s ease-out both; }
+body[data-phase="profile"] #evolvedFairy { top:27dvh !important;animation:fairyMoveToTop .85s cubic-bezier(.22,.8,.22,1) both; }
+body[data-phase="profile"] .transform-stage { display:block;padding-top:calc(50dvh - 85px); }
+body[data-phase="profile"] #fairyInfoCard { animation:profileFromBelow .85s .2s ease-out both; }
+@keyframes centerFairyReveal { from{opacity:0;scale:.7}to{opacity:1;scale:1} }
+@keyframes fairyMoveToTop { from{top:50dvh}to{top:27dvh} }
+@keyframes profileFromBelow { from{opacity:0;translate:0 50px}to{opacity:1;translate:0 0} }
+@media(max-width:760px) {
+  body[data-phase="evolved"] #evolvedFairy,body[data-phase="profile"] #evolvedFairy { width:min(72vw,280px);height:min(72vw,280px); }
+  body[data-phase="profile"] .transform-stage { padding-top:calc(50dvh - 70px); }
+}
+body[data-phase="profile"] #evolvedFairy { position:absolute !important;top:calc(27dvh - 85px) !important; }
+@keyframes fairyMoveToTop { from{translate:0 23dvh}to{translate:0 0} }
+@media(max-width:760px) { body[data-phase="profile"] #evolvedFairy { top:calc(27dvh - 70px) !important; } }
