@@ -1237,3 +1237,12 @@ body[data-phase="gratitude"] #evolvedFairy { width:320px;height:320px; }
 @media(max-width:760px) {
   body[data-phase="gratitude"] #evolvedFairy,.magic-fullscreen .evolved-fairy,.magic-fairy-float { width:min(72vw,280px);height:min(72vw,280px); }
 }
+/* The final screen presents the same designed postcard as the saved image. */
+body[data-phase="combined"] #combinedCard {
+  padding:0 !important;background:none;border:0;box-shadow:0 22px 65px #0005;
+  border-radius:18px;overflow:hidden;
+}
+body[data-phase="combined"] #combinedCard::before { display:none; }
+.final-card-preview { display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:18px; }
+#cardPreviewLoading { padding:60px 24px;color:#fff4df; }
+#cardTextFallback:not(.sr-only) { padding:32px;background:#f7f1e5; }

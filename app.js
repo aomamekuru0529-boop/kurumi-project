@@ -9,7 +9,7 @@ const $=selector=>document.querySelector(selector);
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const music=new Music(config.bgmUrl);
 const state={phase:'intro',answers:[],type:types[0],view:0,found:false,traveling:false,drag:null,gyro:false,gyroBase:null,gyroView:0,strokeTime:0,strokeLast:null,strokeX:null,strokeDown:false,exportBlob:null};
-const timers=new Set();let exportPromise=null,toastTimer=null;
+const timers=new Set();let exportPromise=null,toastTimer=null,previewUrl=null,exportGeneration=0;
 function later(fn,ms,{readable=false}={}){const id=setTimeout(()=>{timers.delete(id);fn()},reduced.matches&&!readable?Math.min(ms,180):ms);timers.add(id);return id;}
 function cancelTimers(){for(const id of timers)clearTimeout(id);timers.clear();}
 function announce(message){$('#status').textContent=message;}
@@ -154,12 +154,21 @@ function beginCardHandoff(){
 }
 $('#gratitudeNext').onclick=()=>{if(state.phase!=='gratitude')return;show('transformScreen','combined');$('#combinedCard').classList.add('show');$('#combinedActions').classList.add('show');focus($('#combinedTitle'));announce('カードが完成しました。保存、シェア、再診断ができます。');};
 function reset(){
-  cancelTimers();state.answers=[];state.found=false;state.traveling=false;state.drag=null;state.strokeTime=0;state.strokeDown=false;state.strokeLast=null;state.gyroBase=null;state.exportBlob=null;exportPromise=null;lastStrokeKey=null;
+  cancelTimers();exportGeneration++;if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null;}$('#finalCardPreview').hidden=true;$('#finalCardPreview').removeAttribute('src');$('#cardPreviewLoading').hidden=false;$('#cardPreviewLoading').textContent='カードを仕上げています…';$('#cardTextFallback').classList.add('sr-only');state.answers=[];state.found=false;state.traveling=false;state.drag=null;state.strokeTime=0;state.strokeDown=false;state.strokeLast=null;state.gyroBase=null;state.exportBlob=null;exportPromise=null;lastStrokeKey=null;
   for(const id of ['#fairyInfoCard','#gratitudeCard','#combinedCard']){const e=$(id);e.classList.remove('show','handoff','materialize');e.removeAttribute('style');}
   $('#offeredCard').className='offered-card';$('#magicFairyFloat').classList.remove('offering');$('.magic-copy').textContent='妖精が、感謝の魔法をかけています…';$('#combinedActions').classList.remove('show');$('#magicFullscreen').classList.remove('active');$('#flash').classList.remove('go');$('#strokeWrap').style.display='none';$('#strokeBar').style.width='0';$('#strokeWrap').style.removeProperty('--power-progress');$('#powerBurst').classList.remove('active');$('.workshop-room').inert=false;$('#quizWrap').hidden=false;$('#gift').className='gift';$('#gift').removeAttribute('style');$('#gift').innerHTML=giftSvg([]);$('.workshop-bubble').innerHTML='あなたのこと、<br>少しだけ教えて！';for(const id of ['#fairySpeech','#tapLabel','#tapRing'])$(id).style.display='none';$('#particles').replaceChildren();$('#magicStarfield').replaceChildren();orb.tabIndex=-1;$('.hint').textContent='周りを見渡してみて';show('worldScreen','world');initialPan();focus(viewport);announce('もう一度、妖精を探しましょう。');
 }
 $('#retryBtn').onclick=reset;
-function prepareExport(){const type=state.type;exportPromise=renderCard(type,config,shareUrl(config.publicUrl,location.href)).then(blob=>{if(state.type===type)state.exportBlob=blob;return blob;}).catch(error=>{console.warn('Card export unavailable:',error.message);return null;});}
+function prepareExport(){
+  const type=state.type,run=++exportGeneration,url=shareUrl(config.publicUrl,location.href);
+  exportPromise=renderCard(type,config,url).then(blob=>{if(run===exportGeneration)state.exportBlob=blob;return blob;}).catch(error=>{console.warn('Card export unavailable:',error.message);return null;});
+  void renderCard(type,config,url,{includeShareDetails:false}).then(blob=>{
+    if(run!==exportGeneration)return;
+    if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(blob);
+    $('#finalCardPreview').src=previewUrl;$('#finalCardPreview').alt=`${type.label}の妖精「${type.name}」のクリスマスカード。${type.wish}`;
+    $('#finalCardPreview').hidden=false;$('#cardPreviewLoading').hidden=true;
+  }).catch(()=>{if(run===exportGeneration){$('#cardPreviewLoading').hidden=true;$('#cardTextFallback').classList.remove('sr-only');}});
+}
 async function getExport(){if(state.exportBlob)return state.exportBlob;if(exportPromise){const blob=await exportPromise;if(blob)return blob;}const blob=await renderCard(state.type,config,shareUrl(config.publicUrl,location.href));state.exportBlob=blob;return blob;}
 async function busy(button,task){if(button.disabled)return;button.disabled=true;button.setAttribute('aria-busy','true');try{await task();}catch(error){if(error.name!=='AbortError')toast('処理できませんでした。もう一度お試しください。');}finally{button.disabled=false;button.removeAttribute('aria-busy');}}
 $('#saveBtn').onclick=()=>busy($('#saveBtn'),async()=>{downloadBlob(await getExport(),`christmas-fairy-${state.type.id}.png`);toast('カードを保存しました。ダウンロードを確認してください。');});
