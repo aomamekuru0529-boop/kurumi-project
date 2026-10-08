@@ -30,7 +30,7 @@ if(config.companyName)$('#companyName').textContent=config.companyName;
 else $('#companyName').hidden=true;
 
 function syncSound(){for(const id of ['#soundBtn','#soundBtn2','#soundBtn3']){const el=$(id);el.textContent=music.enabled?'♪':'♫';el.setAttribute('aria-pressed',String(music.enabled));el.setAttribute('aria-label',music.enabled?'音をオフにする':'音をオンにする');}}
-async function toggleSound(){try{await music.setEnabled(!music.enabled);}catch{toast('音を再生できませんでした。音なしで体験を続けられます。');}syncSound();}
+async function toggleSound(){try{const playback=music.setEnabled(!music.enabled);syncSound();await playback;}catch{toast('音を再生できませんでした。音なしで体験を続けられます。');}syncSound();}
 for(const id of ['#soundBtn','#soundBtn2','#soundBtn3'])$(id).onclick=toggleSound;
 document.addEventListener('visibilitychange',()=>{if(document.hidden)music.stop();else if(music.enabled)void music.setEnabled(true).catch(()=>{music.enabled=false;syncSound()});});
 
@@ -65,7 +65,7 @@ $('#gyroBtn').onclick=async()=>{
   }
   $('#gyroBtn').setAttribute('aria-pressed',String(state.gyro));$('#gyroBtn').textContent=state.gyro?'傾き操作：オン':'傾き操作を使う';
 };
-$('#startBtn').onclick=()=>{show('worldScreen','world');initialPan();focus(viewport);announce('上下左右に見渡して妖精を探してください。');if($('#soundOptIn').checked)void toggleSound();};
+$('#startBtn').onclick=()=>{show('worldScreen','world');initialPan();focus(viewport);announce('上下左右に見渡して妖精を探してください。');const playback=music.setEnabled(true);syncSound();void playback.then(syncSound).catch(()=>{music.enabled=false;syncSound();toast('音を再生できませんでした。音なしで体験を続けられます。');});};
 function goToWorkshop(){
   if(!state.found||state.traveling||state.phase!=='world')return;state.traveling=true;$('#fairySpeech').textContent='じゃあ、ついてきて！';$('#tapLabel').style.display='none';$('#tapRing').style.display='none';
   state.drag=null;$('.world-controls').inert=true;tour.beginJourney?.();$('.hint').textContent='妖精と一緒に、工房へ';announce('妖精が工房へ案内します。');

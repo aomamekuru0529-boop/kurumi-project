@@ -109,3 +109,13 @@ body:not([data-phase="quiz"]) #workshopScreen .right-panel { display:none; }
 
 #cardTextFallback:not(.sr-only) { background:#14221b; }
 #cardTextFallback h2,#cardTextFallback p { color:#eee4ce; }
+
+#intro .experience-guide { margin:26px 0 30px;text-align:left;border-top:1px solid #c8aa7355;border-bottom:1px solid #c8aa7355; }
+#intro .guide-view,#intro .guide-sound { display:flex;gap:18px;align-items:center;padding:20px 0; }
+#intro .guide-sound { border-top:1px solid #c8aa7328; }
+#intro .guide-symbol { flex:0 0 64px;text-align:center;font:28px Georgia,serif;color:#d9bb7f; }
+#intro .guide-sound .guide-symbol { font-size:34px; }
+#intro .experience-guide strong { display:block;color:#f0e5cc;font-size:16px;line-height:1.6;font-weight:600; }
+#intro .experience-guide p { margin:7px 0 0;font-size:12px;line-height:1.9;color:#c3cabb; }
+#intro .intro-duration { margin:18px 0 0;font-size:11px;color:#c2ac80;letter-spacing:.06em; }
+@media(max-width:760px) { #intro .guide-view,#intro .guide-sound { gap:12px;padding:16px 0; }#intro .guide-symbol { flex-basis:50px;font-size:25px; }#intro .experience-guide strong { font-size:13px; }#intro .experience-guide p { font-size:11px; }#intro .experience-guide { margin:22px 0 26px; } }
