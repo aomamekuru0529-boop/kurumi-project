@@ -119,9 +119,12 @@ body:not([data-phase="quiz"]) #workshopScreen .right-panel { display:none; }
 #intro .experience-guide p { margin:7px 0 0;font-size:12px;line-height:1.9;color:#c3cabb; }
 #intro .intro-duration { margin:18px 0 0;font-size:11px;color:#c2ac80;letter-spacing:.06em; }
 @media(max-width:760px) { #intro .guide-view,#intro .guide-sound { gap:12px;padding:16px 0; }#intro .guide-symbol { flex-basis:50px;font-size:25px; }#intro .experience-guide strong { font-size:13px; }#intro .experience-guide p { font-size:11px; }#intro .experience-guide { margin:22px 0 26px; } }
-/* Center the introductory guidance as a group, including its symbols. */
-#intro .experience-guide { text-align:center; }
-#intro .guide-view,#intro .guide-sound { flex-direction:column;justify-content:center;gap:10px; }
-#intro .guide-symbol { flex:0 0 auto; }
-#intro .experience-guide p { text-wrap:balance; }
-@media(max-width:760px) { #intro .guide-view,#intro .guide-sound { gap:8px; }#intro .guide-symbol { flex-basis:auto; } }
+/* Center each icon-and-copy group while keeping its content left aligned. */
+#intro .experience-guide { text-align:left; }
+#intro .guide-view,#intro .guide-sound { justify-content:center; }
+#intro .guide-view>div,#intro .guide-sound>div { flex:0 1 270px;min-width:0; }
+#intro .guide-symbol { flex:0 0 64px; }
+@media(max-width:760px) {
+  #intro .guide-view>div,#intro .guide-sound>div { flex-basis:220px; }
+  #intro .guide-symbol { flex-basis:50px; }
+}
