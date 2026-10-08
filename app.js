@@ -83,17 +83,32 @@ function renderQuestion(){
   q.choices.forEach((text,type)=>{const button=document.createElement('button');button.type='button';button.className='option';button.textContent=text;button.onclick=()=>answer(type,button);$('#options').append(button);});
   focus($('#questionText'));announce(`${i+1}問目。${q.title}`);
 }
-function sparkFrom(el){const r=el.getBoundingClientRect(),g=$('#gift').getBoundingClientRect();for(let i=0;i<(reduced.matches?0:14);i++){const dot=document.createElement('i');dot.className='particle';dot.style.left=`${r.left+r.width/2}px`;dot.style.top=`${r.top+r.height/2}px`;dot.style.setProperty('--dx',`${g.left+g.width/2-r.left-r.width/2}px`);dot.style.setProperty('--dy',`${g.top+g.height/2-r.top-r.height/2}px`);$('#particles').append(dot);later(()=>dot.remove(),900);}}
-function answer(index,el){
-  if(state.phase!=='quiz'||el.disabled)return;for(const button of $('#options').children)button.disabled=true;sparkFrom(el);state.answers.push(index);
-  const firstAnswer=state.answers.length===1;
-  $('#gift').innerHTML=giftSvg(state.answers,{open:firstAnswer,opening:firstAnswer});
-  if(firstAnswer){
-    later(()=>{$('#gift').innerHTML=giftSvg(state.answers,{open:true,sparkles:true});},350);
-    later(()=>{$('#gift').innerHTML=giftSvg(state.answers,{closing:true});},1500);
+function sparkFrom(el){
+  if(reduced.matches)return 0;
+  const r=el.getBoundingClientRect(),g=$('#gift').getBoundingClientRect(),tx=g.left+g.width/2,ty=g.top+g.height*.58;
+  for(let i=0;i<56;i++){
+    const dot=document.createElement('i');dot.className='particle answer-spark';dot.textContent=i%3===0?'✦':'';
+    const x=r.left+r.width*(.2+.6*(i%13)/12),y=r.top+r.height/2+Math.sin(i*2.4)*12,dx=tx-x+Math.sin(i)*18,dy=ty-y+Math.cos(i)*16,delay=i%8*30;
+    dot.style.left=`${x}px`;dot.style.top=`${y}px`;dot.style.setProperty('--dx',`${dx}px`);dot.style.setProperty('--dy',`${dy}px`);dot.style.setProperty('--mx',`${dx*.5+Math.sin(i*1.9)*65}px`);dot.style.setProperty('--my',`${dy*.5-40-Math.cos(i)*30}px`);dot.style.setProperty('--spark-delay',`${delay}ms`);dot.style.setProperty('--spark-duration',`${1000-delay}ms`);dot.style.setProperty('--spark-size',`${i%3===0?14+i%5:3+i%5}px`);
+    $('#particles').append(dot);later(()=>dot.remove(),1050);
   }
+  return 1000;
+}
+function giftArrival(){
+  if(reduced.matches)return;
+  const gift=$('#gift');gift.classList.remove('receiving');void gift.offsetWidth;gift.classList.add('receiving');later(()=>gift.classList.remove('receiving'),650);
+  const r=gift.getBoundingClientRect();for(let i=0;i<24;i++){const dot=document.createElement('i');dot.className='particle arrival-spark';dot.textContent='✦';dot.style.left=`${r.left+r.width/2}px`;dot.style.top=`${r.top+r.height*.58}px`;dot.style.setProperty('--dx',`${Math.cos(i*2.4)*(65+i*3)}px`);dot.style.setProperty('--dy',`${Math.sin(i*2.4)*(65+i*3)}px`);$('#particles').append(dot);later(()=>dot.remove(),800);}
+}
+function answer(index,el){
+  if(state.phase!=='quiz'||el.disabled)return;for(const button of $('#options').children)button.disabled=true;el.classList.add('selected');
+  const arrival=sparkFrom(el),previous=[...state.answers];state.answers.push(index);const firstAnswer=state.answers.length===1;
+  if(firstAnswer)$('#gift').innerHTML=giftSvg(previous,{open:true,opening:true});
+  later(()=>{
+    $('#gift').innerHTML=giftSvg(state.answers,firstAnswer?{open:true,sparkles:true}:{});giftArrival();
+    if(firstAnswer)later(()=>{$('#gift').innerHTML=giftSvg(state.answers,{closing:true});},750);
+  },arrival);
   $('#quizProgress').style.width=`${state.answers.length/questions.length*100}%`;
-  later(()=>{if(state.answers.length<questions.length)renderQuestion();else finishQuiz();},firstAnswer?2200:800);
+  later(()=>{if(state.answers.length<questions.length)renderQuestion();else finishQuiz();},firstAnswer?2400:1700);
 }
 function finishQuiz(){
   state.type=types[resultIndex(state.answers)];show('workshopScreen','gift');$('#quizWrap').hidden=true;

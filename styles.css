@@ -1260,3 +1260,13 @@ body[data-phase="world"]:has(#fairyOrb.following) .world-controls { opacity:0;po
 #fairyOrb::before,#fairyOrb::after { display:none; }
 .outdoor-fairy-visual { position:absolute;inset:-9px;pointer-events:none; }
 .outdoor-fairy-visual svg { display:block;width:100%;height:100%; }
+
+/* A full stream of answer magic converges before the gift changes. */
+.answer-spark { width:var(--spark-size);height:var(--spark-size);animation:answerMagic var(--spark-duration) var(--spark-delay) cubic-bezier(.3,.1,.55,1) both;color:#fff0b6;font-style:normal;font-size:var(--spark-size);line-height:1;text-shadow:0 0 12px #ffd76a; }
+.answer-spark:nth-child(3n+1),.arrival-spark { background:none;box-shadow:none; }
+@keyframes answerMagic { 0%{opacity:0;transform:translate(0,0) scale(.4)}15%{opacity:1}50%{opacity:1;transform:translate(var(--mx),var(--my)) scale(1.25)}95%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.4)} }
+.arrival-spark { width:12px;height:12px;font-style:normal;font-size:12px;color:#fff0b6;text-shadow:0 0 12px #ffd76a;animation:arrivalMagic .75s ease-out both; }
+@keyframes arrivalMagic { 0%{opacity:1;transform:translate(0,0) scale(.5)}25%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.25)} }
+#gift.receiving svg { animation:giftReceivesMagic .65s ease-out; }
+@keyframes giftReceivesMagic { 0%,100%{filter:none}35%{filter:drop-shadow(0 0 24px #ffe2a0) brightness(1.35)} }
+.right-panel .option.selected:disabled { opacity:1;border-color:#cdb27d;background:#bda06b22; }
