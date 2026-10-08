@@ -30,7 +30,7 @@ export class Tour {
   text(text){const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');x.fillStyle='#243d32';x.fillRect(0,0,512,128);x.strokeStyle='#c5a770';x.lineWidth=4;x.strokeRect(8,8,496,112);x.fillStyle='#f1ddb0';x.font='500 38px Georgia';x.textAlign='center';x.fillText(text,256,78);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshStandardMaterial({map:t,roughness:.8});}
   wire(parent,points,color='#304334',radius=.025){const curve=new THREE.CatmullRomCurve3(points);return this.mesh(new THREE.TubeGeometry(curve,32,radius,6,false),this.material(color),parent);}
   house(angle,distance,color,name){
-    const g=new THREE.Group();g.position.set(-Math.sin(angle)*distance,0,Math.cos(angle)*distance);g.rotation.y=angle+Math.PI;g.userData.kind='house';this.scene.add(g);
+    const g=new THREE.Group();g.position.set(-Math.sin(angle)*distance,0,Math.cos(angle)*distance);g.rotation.y=Math.PI-angle;g.userData.kind='house';this.scene.add(g);
     const wall=this.cladding(color),m=this.materials,w=7,h=4.6,d=5.8;
     this.box(g,w,h,d,0,h/2,0,wall);this.box(g,w+.3,.3,d+.3,0,.15,0,this.material('#72828e'));
     // Triangle gable extruded through the house, beneath two pitched roof slabs.
@@ -60,6 +60,7 @@ export class Tour {
     // A recessed cobbled square gives the near houses a believable scale.
     const plaza=this.mesh(new THREE.PlaneGeometry(13,13,12,12).rotateX(-Math.PI/2),this.material('#637984'),this.scene,0,.015,0);plaza.castShadow=false;
     const stones=new THREE.InstancedMesh(new THREE.BoxGeometry(.52,.03,.38),this.material('#9baeb4'),500);const dummy=new THREE.Object3D();let n=0;for(let z=-6.5;z<6.5;z+=.5)for(let x=-6.5;x<6.5;x+=.66){if(Math.hypot(x,z)>6.5||n>=500)continue;dummy.position.set(x+(Math.round(z*2)%2)*.22,.04,z);dummy.updateMatrix();stones.setMatrixAt(n++,dummy.matrix);}stones.count=n;stones.instanceMatrix.needsUpdate=true;stones.receiveShadow=true;this.scene.add(stones);
+    this.workshopAngle=1.15;this.workshopDistance=31;this.house(this.workshopAngle,this.workshopDistance,'#395448','ありがとう工房');
     this.house(0,14,'#7a4844','NOEL • BAKERY');this.house(1.5,14,'#53665c','GIFT ATELIER');this.house(3,15,'#695775','WINTER HOUSE');this.house(4.6,14,'#496172','CHRISTMAS POST');
     for(let i=0;i<65;i++)this.tree(i/65*Math.PI*2,32+(i%5)*3,5+(i%4)*1.1);
     for(const a of [-.8,.55,1.95,2.65,3.65,5.35])this.lantern(a,8.8);
@@ -84,9 +85,22 @@ export class Tour {
     this.scene.traverse(obj=>{if(!obj.isMesh||obj.isInstancedMesh)return;const key=`${obj.material.uuid}/${obj.castShadow}/${obj.receiveShadow}`;if(!groups.has(key))groups.set(key,{material:obj.material,cast:obj.castShadow,receive:obj.receiveShadow,geometries:[]});const geometry=(obj.geometry.index?obj.geometry.toNonIndexed():obj.geometry.clone()).applyMatrix4(obj.matrixWorld);groups.get(key).geometries.push(geometry);old.push(obj);});
     for(const mesh of old)mesh.removeFromParent();for(const group of groups.values()){const geometry=mergeGeometries(group.geometries);const mesh=new THREE.Mesh(geometry,group.material);mesh.castShadow=group.cast;mesh.receiveShadow=group.receive;this.scene.add(mesh);for(const g of group.geometries)g.dispose();}
   }
+  resetJourney(){this.journey=null;this.camera.position.set(0,2.8,0);this.hotspot.set(-Math.sin(1.15)*11,3.15,Math.cos(1.15)*11);this.orb.style.scale='';this.orb.classList.remove('following');}
+  beginJourney(){this.journey={yaw:this.yaw,pitch:this.pitch};this.orb.classList.add('following');}
+  follow(progress){
+    const ease=x=>x*x*(3-2*x),move=ease(Math.max(0,Math.min(1,(progress-.12)/.88)));
+    const angle=this.workshopAngle,dx=-Math.sin(angle),dz=Math.cos(angle);
+    const bend=Math.sin(move*Math.PI)*1.1;
+    this.camera.position.set(dx*22*move+dz*bend,2.8,dz*22*move-dx*bend);
+    const fairyDistance=11+16*move;
+    this.hotspot.set(dx*fairyDistance+dz*bend*.55,3.15+Math.sin(move*Math.PI*3)*.3-1.2*move**5,dz*fairyDistance-dx*bend*.55);
+    const offset=this.hotspot.clone().sub(this.camera.position),targetYaw=Math.atan2(-offset.x,offset.z),targetPitch=Math.atan2(offset.y,Math.hypot(offset.x,offset.z));
+    const turn=ease(Math.min(1,progress/.16));this.yaw=this.journey.yaw+Math.atan2(Math.sin(targetYaw-this.journey.yaw),Math.cos(targetYaw-this.journey.yaw))*turn;this.pitch=this.journey.pitch+(targetPitch-this.journey.pitch)*turn;
+    this.orb.style.scale=String(1-.35*move);this.canvas.dataset.journey=String(progress);this.canvas.dataset.cameraDistance=String(22*move);this.render();
+  }
   set(yaw,pitch=this.pitch){this.yaw=yaw;this.pitch=Math.max(-Math.PI*.47,Math.min(Math.PI*.47,pitch));this.render();}
   render(){const w=this.viewport.clientWidth,h=this.viewport.clientHeight;if(!w||!h)return;if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
-    this.camera.lookAt(-Math.sin(this.yaw)*Math.cos(this.pitch),2.8+Math.sin(this.pitch),Math.cos(this.yaw)*Math.cos(this.pitch));this.camera.updateMatrixWorld();this.renderer.render(this.scene,this.camera);this.lastDraw=performance.now();
+    this.camera.lookAt(this.camera.position.x-Math.sin(this.yaw)*Math.cos(this.pitch),this.camera.position.y+Math.sin(this.pitch),this.camera.position.z+Math.cos(this.yaw)*Math.cos(this.pitch));this.camera.updateMatrixWorld();this.renderer.render(this.scene,this.camera);this.lastDraw=performance.now();
     const p=this.hotspot.clone().project(this.camera),visible=p.z<1&&p.z>-1;const x=visible?(p.x+1)*w/2:w+200,y=(1-p.y)*h/2;this.orb.style.left=`${x-31}px`;this.orb.style.top=`${y-31}px`;this.orb.style.visibility=visible&&x>-100&&x<w+100&&y>-100&&y<h+100?'visible':'hidden';this.onView?.();
   }
 }

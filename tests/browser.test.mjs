@@ -25,7 +25,7 @@ async function open(width,{reduced=false,share=true}={}){
 }
 async function enter(page){await page.locator('#startBtn').click();await page.clock.runFor(100);assert.equal(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display),'none');const rect=await page.locator('#fairyOrb').boundingBox();assert(rect.x>page.viewportSize().width);
  for(let i=0;i<10;i++){await page.locator('#lookRight').click();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}
- assert.equal(await page.locator('#fairyOrb').getAttribute('tabindex'),'0');await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(2300);assert.equal(await page.locator('.option').count(),4);
+ assert.equal(await page.locator('#fairyOrb').getAttribute('tabindex'),'0');await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(7500);assert.equal(await page.locator('.option').count(),4);
 }
 async function answer(page,index){for(let i=0;i<4;i++){await page.locator('.option').nth(index).click();await page.clock.runFor(2400);}await page.clock.runFor(13500);assert.equal(await page.locator('body').getAttribute('data-phase'),'stroke');
  await page.locator('#strokeFairy').focus();for(let i=0;i<14;i++)await page.keyboard.press(i%2?'ArrowRight':'ArrowLeft');const reduce=await page.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches);await page.clock.runFor(reduce?400:1700);assert.equal(await page.locator('body').getAttribute('data-phase'),'evolved');assert(await page.locator('#evolvedFairy svg').isVisible());const centered=await page.locator('#evolvedFairy').boundingBox();assert(Math.abs(centered.x+centered.width/2-page.viewportSize().width/2)<1);assert(Math.abs(centered.y+centered.height/2-page.viewportSize().height/2)<1);assert.equal(await page.locator('#evolvedFairy').evaluate(e=>getComputedStyle(e).animationName),'none');assert.equal(await page.locator('#fairyInfoCard').isVisible(),false);await page.clock.runFor(1500);assert.equal(await page.locator('body').getAttribute('data-phase'),'evolved');await page.clock.runFor(500);assert.equal(await page.locator('body').getAttribute('data-phase'),'profile');}
@@ -38,7 +38,7 @@ for(const [i,width] of [320,390,1280,1920].entries())test(`complete fairy ${i}, 
  await page.locator('#shareBtn').click();const shares=await page.evaluate(()=>window.shares);assert.equal(shares.length,1);assert(shares[0].files[0].size>1000);assert.equal(shares[0].files[0].type,'image/png');
  await page.locator('#retryBtn').click();await page.clock.runFor(200);assert.equal(await page.locator('body').getAttribute('data-phase'),'world');assert.equal(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display),'none');await enterRetry(page);assert.deepEqual(errors,[]);await page.close();
 });
-async function enterRetry(page){for(let i=0;i<10;i++){await page.locator('#lookRight').click();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(2300);assert.equal(await page.locator('.option').count(),4);}
+async function enterRetry(page){for(let i=0;i<10;i++){await page.locator('#lookRight').click();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(7500);assert.equal(await page.locator('.option').count(),4);}
 test('reduced motion and denied clipboard have usable fallbacks',async()=>{
  const {page,errors}=await open(390,{reduced:true,share:false});await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw new Error('denied')}}}));await enter(page);await answer(page,0);await page.locator('#fairyInfoNext').click();await page.clock.runFor(900);await page.locator('#gratitudeNext').click();await page.locator('#shareBtn').click();assert(await page.locator('#shareDialog').isVisible());assert.equal(await page.locator('#shareUrl').inputValue(),base);await page.locator('#closeShare').click();assert.deepEqual(errors,[]);await page.close();
 });
@@ -48,7 +48,7 @@ test('gyro is opt-in, calibration does not reveal fairy, mute state works',async
 test('pointer stroke needs sustained movement and discovery works by dragging',async()=>{
  const {page,errors}=await open(390);await page.locator('#startBtn').click();
  for(let i=0;i<7;i++){await page.mouse.move(320,650);await page.mouse.down();await page.mouse.move(70,650,{steps:10});await page.mouse.up();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}
- await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(2300);
+ await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(7500);
  for(let i=0;i<4;i++){await page.locator('.option').nth(0).click();await page.clock.runFor(2400);}await page.clock.runFor(13500);
  const rect=await page.locator('#strokeFairy').boundingBox();await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();
  for(let i=0;i<10;i++)await page.mouse.move(rect.x+rect.width/2+(i%2?30:-30),rect.y+rect.height/2);
@@ -90,4 +90,14 @@ test('spherical tour looks vertically and returns to the same view after a full 
 
 test('tour remains navigable without WebGL and when sensor permission is denied',async()=>{
  const {page,errors}=await open(390);await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return kind==='webgl'||kind==='webgl2'?null:original.call(this,kind,...args);};window.DeviceOrientationEvent=class extends Event{static requestPermission(){return Promise.resolve('denied')}};});await page.reload();await page.locator('#startBtn').click();await page.clock.runFor(100);assert(await page.locator('.tour-canvas').isVisible());await page.locator('#gyroBtn').click();assert.equal(await page.locator('#gyroBtn').getAttribute('aria-pressed'),'false');assert(await page.locator('#toast').textContent());await page.locator('#lookRight').click();await page.locator('#lookRight').click();await page.locator('#lookRight').click();assert.equal(await page.locator('#fairyOrb').getAttribute('tabindex'),'0');assert.deepEqual(errors,[]);await page.close();
+});
+
+test('fairy leads the camera deeper into the village before the workshop opens',async()=>{
+ const {page,errors}=await open(390);await page.locator('#startBtn').click();await page.clock.runFor(100);
+ for(let i=0;i<10;i++){await page.locator('#lookRight').click();if(await page.locator('#fairyOrb').getAttribute('tabindex')==='0')break;}
+ await page.locator('#fairyOrb').click({force:true});assert(await page.locator('#fairyOrb').evaluate(e=>e.classList.contains('following')));
+ await page.clock.runFor(2200);const early=Number(await page.locator('.tour-canvas').getAttribute('data-camera-distance'));assert(early>0);assert.equal(await page.locator('body').getAttribute('data-phase'),'world');assert(await page.locator('#fairyOrb').isVisible());
+ await page.clock.runFor(2200);const later=Number(await page.locator('.tour-canvas').getAttribute('data-camera-distance'));assert(later>early+5);const fairy=await page.locator('#fairyOrb').boundingBox();assert(Math.abs(fairy.x+fairy.width/2-195)<25);await page.screenshot({path:'test-results/follow-fairy-mobile.png'});
+ await page.clock.runFor(2300);assert.equal(await page.locator('body').getAttribute('data-phase'),'world');assert(Number(await page.locator('.tour-canvas').getAttribute('data-camera-distance'))>21);await page.screenshot({path:'test-results/workshop-arrival-mobile.png'});
+ await page.clock.runFor(1000);assert.equal(await page.locator('body').getAttribute('data-phase'),'quiz');assert.deepEqual(errors,[]);await page.close();
 });

@@ -37,7 +37,7 @@ const viewport=$('#viewport'),orb=$('#fairyOrb');
 const tour=new Tour(viewport,orb,()=>checkFairy());
 function viewScale(){return 2*Math.atan(viewport.clientWidth/viewport.clientHeight*.7);}
 function setView(x){state.view=x;tour.set(x/viewport.clientWidth*viewScale());}
-function initialPan(){state.view=0;tour.set(0,0);state.gyroBase=null;}
+function initialPan(){$('.world-controls').inert=false;tour.resetJourney?.();state.view=0;tour.set(0,0);state.gyroBase=null;}
 function checkFairy(){
   if(state.phase!=='world'||state.found)return;
   const r=orb.getBoundingClientRect(),width=viewport.clientWidth;
@@ -48,7 +48,7 @@ viewport.addEventListener('pointermove',e=>{if(state.drag){state.view=state.drag
 for(const event of ['pointerup','pointercancel','lostpointercapture'])viewport.addEventListener(event,()=>{state.drag=null;state.gyroBase=null;});
 function pan(amount){if(state.phase==='world'&&!state.traveling){setView(state.view+amount);state.gyroBase=null;}}
 $('#lookLeft').onclick=()=>pan(-viewport.clientWidth*.55);$('#lookRight').onclick=()=>pan(viewport.clientWidth*.55);
-viewport.addEventListener('keydown',e=>{if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(e.key==='ArrowRight'||e.key==='ArrowLeft')pan((e.key==='ArrowRight'?1:-1)*viewport.clientWidth*.3);else{tour.set(tour.yaw,tour.pitch+(e.key==='ArrowUp'?1:-1)*.22);state.gyroBase=null;}}});
+viewport.addEventListener('keydown',e=>{if(state.phase==='world'&&!state.traveling&&['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(e.key==='ArrowRight'||e.key==='ArrowLeft')pan((e.key==='ArrowRight'?1:-1)*viewport.clientWidth*.3);else{tour.set(tour.yaw,tour.pitch+(e.key==='ArrowUp'?1:-1)*.22);state.gyroBase=null;}}});
 const angleDelta=(a,b)=>((a-b+540)%360)-180;
 function onOrientation(e){
   if(!state.gyro||state.phase!=='world'||state.traveling||state.drag)return;
@@ -70,8 +70,11 @@ $('#gyroBtn').onclick=async()=>{
 $('#startBtn').onclick=()=>{show('worldScreen','world');initialPan();focus(viewport);announce('上下左右に見渡して妖精を探してください。');if($('#soundOptIn').checked)void toggleSound();};
 function goToWorkshop(){
   if(!state.found||state.traveling||state.phase!=='world')return;state.traveling=true;$('#fairySpeech').textContent='じゃあ、ついてきて！';$('#tapLabel').style.display='none';$('#tapRing').style.display='none';
-  const start=state.view,target=viewport.clientWidth*2.2/viewScale(),t0=performance.now(),duration=reduced.matches?0:1700;
-  let lastTravelFrame=-Infinity;function frame(t){if(state.phase!=='world')return;const p=duration?Math.min(1,(t-t0)/duration):1;if(t-lastTravelFrame>=80||p===1){setView(start+(target-start)*(1-(1-p)**3));lastTravelFrame=t;}if(p<1)requestAnimationFrame(frame);else later(()=>{state.traveling=false;show('workshopScreen','quiz');renderQuestion();},250);}
+  state.drag=null;$('.world-controls').inert=true;tour.beginJourney?.();$('.hint').textContent='妖精と一緒に、工房へ';announce('妖精が工房へ案内します。');
+  const start=state.view,t0=performance.now(),duration=reduced.matches?0:6500;
+  let lastTravelFrame=-Infinity;function frame(t){if(state.phase!=='world'||!state.traveling)return;const p=duration?Math.min(1,(t-t0)/duration):1;if(t-lastTravelFrame>=80||p===1){if(tour.follow)tour.follow(p);else setView(start+(viewport.clientWidth*1.15/viewScale()-start)*p);lastTravelFrame=t;}
+    if(p<1)requestAnimationFrame(frame);else{$('#fairySpeech').innerHTML='ありがとう工房に<br>着いたよ！';announce('ありがとう工房に到着しました。');later(()=>{state.traveling=false;state.gyroBase=null;show('workshopScreen','quiz');renderQuestion();},700);}
+  }
   requestAnimationFrame(frame);
 }
 orb.onclick=goToWorkshop;orb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goToWorkshop();}});
