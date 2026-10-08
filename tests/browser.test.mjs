@@ -47,7 +47,7 @@ test('gyro is opt-in, calibration does not reveal fairy, mute state works',async
 });
 test('pointer stroke needs sustained movement and discovery works by dragging',async()=>{
  const {page,errors}=await open(390);await page.locator('#startBtn').click();
- for(let i=0;i<7;i++){await page.mouse.move(320,650);await page.mouse.down();await page.mouse.move(70,650,{steps:10});await page.mouse.up();if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}
+ for(let i=0;i<7;i++){await page.mouse.move(320,650);await page.mouse.down();await page.mouse.move(70,650,{steps:10});await page.mouse.up();await page.clock.runFor(250);if(await page.locator('#fairySpeech').evaluate(e=>getComputedStyle(e).display==='block'))break;}
  await page.locator('#fairyOrb').click({force:true});await page.clock.runFor(7500);
  for(let i=0;i<4;i++){await page.locator('.option').nth(0).click();await page.clock.runFor(2400);}await page.clock.runFor(13500);
  const rect=await page.locator('#strokeFairy').boundingBox();await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();
@@ -79,11 +79,11 @@ test('answers separately add inner sparkles, paper color, satin color and foil d
 });
 
 test('spherical tour looks vertically and returns to the same view after a full gyro turn',async()=>{
- const {page,errors}=await open(390);await page.locator('#startBtn').click();await page.clock.runFor(100);
+ const {page,errors}=await open(390,{reduced:true});await page.locator('#startBtn').click();await page.clock.runFor(100);
  const canvas=page.locator('.tour-canvas');assert(await canvas.isVisible());assert.equal(await canvas.getAttribute('data-scene'),'3d-village');const shot=()=>page.screenshot({clip:{x:0,y:80,width:390,height:600}});
  const start=await shot();await page.locator('#viewport').focus();await page.keyboard.press('ArrowUp');const up=await shot();assert.notDeepEqual(up,start);await page.keyboard.press('ArrowDown');assert.deepEqual(await shot(),start);
  await page.evaluate(()=>{window.DeviceOrientationEvent=class extends Event{static requestPermission(){return Promise.resolve('granted')}}});await page.locator('#gyroBtn').click();
- const orientation=async(alpha,beta=0,gamma=0)=>page.evaluate(({alpha,beta,gamma})=>{const e=new Event('deviceorientation');Object.assign(e,{alpha,beta,gamma});window.dispatchEvent(e);},{alpha,beta,gamma});
+ const orientation=async(alpha,beta=90,gamma=0)=>page.evaluate(({alpha,beta,gamma})=>{const e=new Event('deviceorientation');Object.assign(e,{alpha,beta,gamma});window.dispatchEvent(e);},{alpha,beta,gamma}).then(()=>page.clock.runFor(450));
  await orientation(0);await orientation(90);assert.notDeepEqual(await shot(),start);await orientation(180);await orientation(270);await orientation(360);assert.deepEqual(await shot(),start);
  await orientation(360,30);assert.notDeepEqual(await shot(),start);await page.screenshot({path:'test-results/tour-mobile.png'});await page.locator('#gyroBtn').click();const stopped=await shot();await orientation(120,0);assert.deepEqual(await shot(),stopped);assert.deepEqual(errors,[]);await page.close();
 });

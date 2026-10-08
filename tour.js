@@ -8,17 +8,30 @@ export class Tour {
     this.viewport=viewport;this.orb=orb;this.onView=onView;this.reduced=matchMedia('(prefers-reduced-motion: reduce)');this.yaw=0;this.pitch=0;
     try{this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});}catch{return new Panorama(viewport,orb,onView);}
     this.canvas=this.renderer.domElement;this.canvas.className='tour-canvas';this.canvas.setAttribute('aria-hidden','true');this.canvas.dataset.scene='3d-village';viewport.prepend(this.canvas);viewport.append(orb);
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.35;
-    this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.35;
+    this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFShadowMap;
     this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#101c30');this.scene.fog=new THREE.FogExp2('#17283d',.012);
     this.camera=new THREE.PerspectiveCamera(2*Math.atan(.7)*180/Math.PI,1,.1,180);this.camera.position.set(0,2.8,0);
-    this.materialCache=new Map();this.materials={snow:this.material('#c4d5df'),wood:this.material('#4e302b'),trim:this.material('#b49668'),roof:this.material('#272d3b'),pine:this.material('#173e35'),gold:this.material('#bba16a',.45,.6),light:new THREE.MeshStandardMaterial({color:'#ffd08b',emissive:'#ffb74d',emissiveIntensity:2,roughness:.4})};
+    this.materialCache=new Map();this.bulbMaterials=new Map();this.materials={snow:this.material('#c4d5df'),wood:this.material('#4e302b'),trim:this.material('#b49668'),roof:this.material('#272d3b'),pine:this.material('#173e35'),gold:this.material('#bba16a',.45,.6),light:new THREE.MeshBasicMaterial({color:'#ffe2a0',toneMapped:false})};
     this.scene.add(new THREE.HemisphereLight('#b0cbe6','#3c3b49',2));const moon=new THREE.DirectionalLight('#bcdcff',2.1);moon.position.set(-15,30,-10);moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);Object.assign(moon.shadow.camera,{left:-24,right:24,top:24,bottom:-24,far:90});moon.shadow.normalBias=.08;this.scene.add(moon);
     this.build();this.batchScenery();this.renderer.shadowMap.autoUpdate=false;this.renderer.shadowMap.needsUpdate=true;this.hotspot=new THREE.Vector3(-Math.sin(1.15)*11,3.15,Math.cos(1.15)*11);
     new ResizeObserver(()=>this.render()).observe(viewport);
-    let lastFrame=-Infinity;const tick=t=>{if(!this.reduced.matches&&t-lastFrame>100&&t-(this.lastDraw??-Infinity)>90&&document.body.dataset.phase==='world'&&!document.hidden){lastFrame=t;this.snow.rotation.y=t*.000008;this.render();}requestAnimationFrame(tick);};requestAnimationFrame(tick);
+    let lastSnow=-Infinity,lastTick=0;
+    const tick=t=>{
+      const dt=Math.min(50,Math.max(1,t-lastTick));lastTick=t;
+      if(document.body.dataset.phase==='world'&&!document.hidden){
+        let moved=false;
+        if(this.target){const dy=Math.atan2(Math.sin(this.target.yaw-this.yaw),Math.cos(this.target.yaw-this.yaw)),dp=this.target.pitch-this.pitch;
+          const weight=1-Math.exp(-dt/28);this.yaw+=dy*weight;this.pitch+=dp*weight;moved=true;
+          if(Math.abs(dy)+Math.abs(dp)<.00015){this.yaw=this.target.yaw;this.pitch=this.target.pitch;this.target=null;}
+        }
+        const snowing=!this.reduced.matches&&t-lastSnow>100;
+        if(snowing){lastSnow=t;this.snow.rotation.y=t*.000008;}
+        if(moved||snowing)this.render();
+      }requestAnimationFrame(tick);
+    };requestAnimationFrame(tick);
   }
-  material(color,roughness=.85,metalness=0){const key=`${color}/${roughness}/${metalness}`;if(!this.materialCache.has(key))this.materialCache.set(key,new THREE.MeshStandardMaterial({color,roughness,metalness}));return this.materialCache.get(key);}
+  material(color,roughness=.85,metalness=0){const key=`${color}/${roughness}/${metalness}`;if(!this.materialCache.has(key))this.materialCache.set(key,roughness>=.8&&metalness===0?new THREE.MeshLambertMaterial({color}):new THREE.MeshStandardMaterial({color,roughness,metalness}));return this.materialCache.get(key);}
   mesh(geometry,material,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
   box(parent,w,h,d,x,y,z,material){return this.mesh(new THREE.BoxGeometry(w,h,d),material,parent,x,y,z);}
   sphere(parent,r,x,y,z,material){return this.mesh(new THREE.SphereGeometry(r,12,8),material,parent,x,y,z);}
@@ -46,7 +59,7 @@ export class Tour {
     const wreath=this.mesh(new THREE.TorusGeometry(.36,.1,8,24),m.pine,g,0,2.1,d/2+.36);for(let i=0;i<7;i++)this.sphere(g,.055,Math.sin(i)*.34,2.1+Math.cos(i)*.34,d/2+.47,this.material('#a8313c'));
     this.box(g,1.8,.25,.9,0,.15,d/2+.55,m.snow);this.box(g,2.9,.62,.15,0,3.85,d/2+.2,this.text(name));
     // Warm festive festoons follow the eaves, rather than floating in the sky.
-    const points=[];for(let i=0;i<=24;i++){const xx=-3.7+i*7.4/24,yy=4.45-Math.sin(i/24*Math.PI)*.42;points.push(new THREE.Vector3(xx,yy,3.48));if(i%2===0){const colors=['#ffc574','#e16b67','#91baa2'];const bulb=new THREE.MeshBasicMaterial({color:colors[(i/2)%3]});this.sphere(g,.065,xx,yy-.1,3.48,bulb);}}
+    const points=[];for(let i=0;i<=24;i++){const xx=-3.7+i*7.4/24,yy=4.45-Math.sin(i/24*Math.PI)*.42;points.push(new THREE.Vector3(xx,yy,3.48));if(i%2===0){const colors=['#ffc574','#e16b67','#91baa2'];const color=colors[(i/2)%3];if(!this.bulbMaterials.has(color))this.bulbMaterials.set(color,new THREE.MeshBasicMaterial({color,toneMapped:false}));const bulb=this.bulbMaterials.get(color);this.sphere(g,.065,xx,yy-.1,3.48,bulb);}}
     this.wire(g,points);
     const glow=new THREE.PointLight('#ffb85b',22,13,2);glow.position.set(0,2,5);g.add(glow);
     for(const xx of [-3.8,3.8]){this.sphere(g,1.1,xx,.15,3.5,m.snow).scale.set(1,.35,1);}
@@ -82,11 +95,11 @@ export class Tour {
   }
   batchScenery(){
     this.scene.updateMatrixWorld(true);const groups=new Map(),old=[];
-    this.scene.traverse(obj=>{if(!obj.isMesh||obj.isInstancedMesh)return;const key=`${obj.material.uuid}/${obj.castShadow}/${obj.receiveShadow}`;if(!groups.has(key))groups.set(key,{material:obj.material,cast:obj.castShadow,receive:obj.receiveShadow,geometries:[]});const geometry=(obj.geometry.index?obj.geometry.toNonIndexed():obj.geometry.clone()).applyMatrix4(obj.matrixWorld);groups.get(key).geometries.push(geometry);old.push(obj);});
+    this.scene.traverse(obj=>{if(!obj.isMesh||obj.isInstancedMesh)return;const pos=new THREE.Vector3().setFromMatrixPosition(obj.matrixWorld),sector=Math.hypot(pos.x,pos.z)<8?'center':Math.floor((Math.atan2(pos.x,pos.z)+Math.PI)/(Math.PI/4));const key=`${obj.material.uuid}/${obj.castShadow}/${obj.receiveShadow}/${sector}`;if(!groups.has(key))groups.set(key,{material:obj.material,cast:obj.castShadow,receive:obj.receiveShadow,geometries:[]});const geometry=(obj.geometry.index?obj.geometry.toNonIndexed():obj.geometry.clone()).applyMatrix4(obj.matrixWorld);groups.get(key).geometries.push(geometry);old.push(obj);});
     for(const mesh of old)mesh.removeFromParent();for(const group of groups.values()){const geometry=mergeGeometries(group.geometries);const mesh=new THREE.Mesh(geometry,group.material);mesh.castShadow=group.cast;mesh.receiveShadow=group.receive;this.scene.add(mesh);for(const g of group.geometries)g.dispose();}
   }
-  resetJourney(){this.journey=null;this.camera.position.set(0,2.8,0);this.hotspot.set(-Math.sin(1.15)*11,3.15,Math.cos(1.15)*11);this.orb.style.scale='';this.orb.classList.remove('following');}
-  beginJourney(){this.journey={yaw:this.yaw,pitch:this.pitch};this.orb.classList.add('following');}
+  resetJourney(){this.target=null;this.journey=null;this.camera.position.set(0,2.8,0);this.hotspot.set(-Math.sin(1.15)*11,3.15,Math.cos(1.15)*11);this.orb.style.scale='';this.orb.classList.remove('following');}
+  beginJourney(){this.target=null;this.journey={yaw:this.yaw,pitch:this.pitch};this.orb.classList.add('following');}
   follow(progress){
     const ease=x=>x*x*(3-2*x),move=ease(Math.max(0,Math.min(1,(progress-.12)/.88)));
     const angle=this.workshopAngle,dx=-Math.sin(angle),dz=Math.cos(angle);
@@ -98,7 +111,7 @@ export class Tour {
     const turn=ease(Math.min(1,progress/.16));this.yaw=this.journey.yaw+Math.atan2(Math.sin(targetYaw-this.journey.yaw),Math.cos(targetYaw-this.journey.yaw))*turn;this.pitch=this.journey.pitch+(targetPitch-this.journey.pitch)*turn;
     this.orb.style.scale=String(1-.35*move);this.canvas.dataset.journey=String(progress);this.canvas.dataset.cameraDistance=String(22*move);this.render();
   }
-  set(yaw,pitch=this.pitch){this.yaw=yaw;this.pitch=Math.max(-Math.PI*.47,Math.min(Math.PI*.47,pitch));this.render();}
+  set(yaw,pitch=this.pitch,{smooth=false}={}){pitch=Math.max(-Math.PI*.499,Math.min(Math.PI*.499,pitch));if(smooth){this.target={yaw,pitch};return;}this.target=null;this.yaw=yaw;this.pitch=pitch;this.render();}
   render(){const w=this.viewport.clientWidth,h=this.viewport.clientHeight;if(!w||!h)return;if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
     this.camera.lookAt(this.camera.position.x-Math.sin(this.yaw)*Math.cos(this.pitch),this.camera.position.y+Math.sin(this.pitch),this.camera.position.z+Math.cos(this.yaw)*Math.cos(this.pitch));this.camera.updateMatrixWorld();this.renderer.render(this.scene,this.camera);this.lastDraw=performance.now();
     const p=this.hotspot.clone().project(this.camera),visible=p.z<1&&p.z>-1;const x=visible?(p.x+1)*w/2:w+200,y=(1-p.y)*h/2;this.orb.style.left=`${x-31}px`;this.orb.style.top=`${y-31}px`;this.orb.style.visibility=visible&&x>-100&&x<w+100&&y>-100&&y<h+100?'visible':'hidden';this.onView?.();
