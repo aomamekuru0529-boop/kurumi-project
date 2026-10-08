@@ -210,3 +210,12 @@ window.addEventListener('orientationchange',()=>{state.gyroBase=null;});
 for(let i=0;i<16;i++){const mote=document.createElement('i');mote.textContent=i%3?'✦':'✧';mote.style.setProperty('--mote-angle',`${i*360/16}deg`);mote.style.setProperty('--mote-delay',`${i*.19}s`);$('#thankYouMotes').append(mote);}
 for(let i=0;i<34;i++){const dot=document.createElement('i');dot.style.left=`${Math.random()*100}%`;dot.style.top=`${Math.random()*100}%`;$('.ornaments').append(dot);}
 show('intro','intro');syncSound();
+
+function updateTourVisibleArea(){
+  const visible=window.visualViewport;
+  document.documentElement.style.setProperty('--world-visible-bottom',`${visible?visible.height+visible.offsetTop:window.innerHeight}px`);
+}
+window.visualViewport?.addEventListener('resize',updateTourVisibleArea);
+window.visualViewport?.addEventListener('scroll',updateTourVisibleArea);
+window.addEventListener('resize',updateTourVisibleArea);
+updateTourVisibleArea();

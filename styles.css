@@ -1270,3 +1270,14 @@ body[data-phase="world"]:has(#fairyOrb.following) .world-controls { opacity:0;po
 #gift.receiving svg { animation:giftReceivesMagic .65s ease-out; }
 @keyframes giftReceivesMagic { 0%,100%{filter:none}35%{filter:drop-shadow(0 0 24px #ffe2a0) brightness(1.35)} }
 .right-panel .option.selected:disabled { opacity:1;border-color:#cdb27d;background:#bda06b22; }
+/* Keep tour controls inside the visible area, above mobile browser chrome. */
+#worldScreen .world-controls {
+  position:fixed;top:calc(var(--world-visible-bottom, 100dvh) - env(safe-area-inset-bottom, 0px) - 66px);bottom:auto;
+  z-index:60;width:max-content;max-width:calc(100vw - 32px);justify-content:center;gap:10px;
+}
+#worldScreen .world-controls .iconbtn { width:48px;height:48px;flex:0 0 48px;background:#142b35ed; }
+#worldScreen .world-controls .secondary { min-height:48px;max-width:calc(100vw - 152px);white-space:normal;line-height:1.4; }
+#worldScreen .hint {
+  position:fixed;top:calc(var(--world-visible-bottom, 100dvh) - env(safe-area-inset-bottom, 0px) - 124px);bottom:auto;
+  max-width:calc(100vw - 40px);width:max-content;text-align:center;pointer-events:none;
+}

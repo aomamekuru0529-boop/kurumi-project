@@ -101,3 +101,13 @@ test('fairy leads the camera deeper into the village before the workshop opens',
  await page.clock.runFor(2300);assert.equal(await page.locator('body').getAttribute('data-phase'),'world');assert(Number(await page.locator('.tour-canvas').getAttribute('data-camera-distance'))>21);await page.screenshot({path:'test-results/workshop-arrival-mobile.png'});
  await page.clock.runFor(1000);assert.equal(await page.locator('body').getAttribute('data-phase'),'quiz');assert.deepEqual(errors,[]);await page.close();
 });
+
+test('tour buttons remain visible and clickable when the visible viewport becomes shorter',async()=>{
+ const {page,errors}=await open(320);await page.locator('#startBtn').click();await page.clock.runFor(100);
+ for(const height of [568,440,700]){
+  await page.setViewportSize({width:320,height});await page.clock.runFor(50);
+  for(const id of ['#lookLeft','#gyroBtn','#lookRight']){const box=await page.locator(id).boundingBox();assert(box.x>=0&&box.y>=0&&box.x+box.width<=320&&box.y+box.height<=height,`${id} height=${height} bounds=${JSON.stringify(box)} visible=${await page.evaluate(()=>visualViewport.height)}`);assert(await page.locator(id).evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===e;}));}
+  await page.locator('#lookRight').click();await page.locator('#lookLeft').click();
+ }
+ assert.deepEqual(errors,[]);await page.close();
+});
