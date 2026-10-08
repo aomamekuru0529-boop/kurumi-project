@@ -59,13 +59,16 @@ function onOrientation(e){
   const view=sensorView.update(sample,screenAngle);state.view=view.yaw/viewScale()*viewport.clientWidth;tour.set(view.yaw,view.pitch,{smooth:true});
 }
 window.addEventListener('deviceorientation',onOrientation);
-$('#gyroBtn').onclick=async()=>{
-  if(state.gyro){state.gyro=false;}else{
-    try{if(!window.isSecureContext||typeof DeviceOrientationEvent==='undefined')throw new Error();if(typeof DeviceOrientationEvent.requestPermission==='function'&&await DeviceOrientationEvent.requestPermission()!=='granted')throw new Error();state.gyro=true;state.gyroBase=null;announce('スマホを傾けて見回せます。');}catch{toast('センサーを使えません。指のドラッグか左右ボタンで見回せます。');return;}
-  }
-  $('#gyroBtn').setAttribute('aria-pressed',String(state.gyro));$('#gyroBtn').textContent=state.gyro?'傾き操作：オン':'傾き操作を使う';
-};
-$('#startBtn').onclick=()=>{show('worldScreen','world');initialPan();focus(viewport);announce('上下左右に見渡して妖精を探してください。');const playback=music.setEnabled(true);syncSound();void playback.then(syncSound).catch(()=>{music.enabled=false;syncSound();toast('音を再生できませんでした。音なしで体験を続けられます。');});};
+function syncGyro(){const button=$('#gyroBtn');button.setAttribute('aria-pressed',String(state.gyro));button.textContent=state.gyro?'傾き操作ON':'傾き操作OFF';}
+async function enableGyro(){
+  try{
+    if(!window.isSecureContext||typeof DeviceOrientationEvent==='undefined')throw new Error();
+    if(typeof DeviceOrientationEvent.requestPermission==='function'&&await DeviceOrientationEvent.requestPermission()!=='granted')throw new Error();
+    state.gyro=true;state.gyroBase=null;syncGyro();announce('スマホを傾けて見回せます。');
+  }catch{state.gyro=false;syncGyro();toast('センサーを使えません。指のドラッグか左右ボタンで見回せます。');}
+}
+$('#gyroBtn').onclick=()=>{if(state.gyro){state.gyro=false;syncGyro();}else void enableGyro();};
+$('#startBtn').onclick=()=>{show('worldScreen','world');initialPan();focus(viewport);announce('上下左右に見渡して妖精を探してください。');void enableGyro();const playback=music.setEnabled(true);syncSound();void playback.then(syncSound).catch(()=>{music.enabled=false;syncSound();toast('音を再生できませんでした。音なしで体験を続けられます。');});};
 function goToWorkshop(){
   if(!state.found||state.traveling||state.phase!=='world')return;state.traveling=true;$('#fairySpeech').textContent='じゃあ、ついてきて！';$('#tapLabel').style.display='none';$('#tapRing').style.display='none';
   state.drag=null;$('.world-controls').inert=true;tour.beginJourney?.();$('.hint').textContent='妖精と一緒に、工房へ';announce('妖精が工房へ案内します。');
