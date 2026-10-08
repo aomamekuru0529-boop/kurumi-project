@@ -22,7 +22,7 @@ function show(screen,phase){
   $('#transformScreen').scrollTop=0;
 }
 function mountFairy(id,type){const el=$(id);el.innerHTML=fairySvg(type,id.slice(1));el.setAttribute('aria-label',type?`${type.label}の妖精 ${type.name}`:'光の妖精');}
-for(const id of ['#strokeFairy','.mini-fairy'])mountFairy(id,null);
+for(const id of ['#strokeFairy','.mini-fairy','#outdoorFairyVisual'])mountFairy(id,null);
 $('#gift').innerHTML=giftSvg([]);
 for(const p of document.querySelectorAll('[data-company-message]'))p.textContent=config.companyMessage;
 if(config.companyName)$('#companyName').textContent=config.companyName;
