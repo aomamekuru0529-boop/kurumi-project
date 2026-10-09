@@ -9,4 +9,4 @@ await copyFile('vendor/qrcode.LICENSE.txt', 'dist/qrcode.LICENSE.txt');
 await copyFile('vendor/dijkstrajs.LICENSE.txt', 'dist/dijkstrajs.LICENSE.txt');
 try { await access('assets'); await cp('assets', 'dist/assets', { recursive: true }); } catch (error) { if (error.code !== 'ENOENT') throw error; }
 console.log('Production files generated in dist/');
-await cp('downloads', 'dist/downloads', { recursive: true });
+try { await access('downloads'); await cp('downloads', 'dist/downloads', { recursive: true }); } catch (error) { if (error.code !== 'ENOENT') throw error; }
