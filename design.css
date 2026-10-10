@@ -128,3 +128,79 @@ body:not([data-phase="quiz"]) #workshopScreen .right-panel { display:none; }
   #intro .guide-view>div,#intro .guide-sound>div { flex-basis:220px; }
   #intro .guide-symbol { flex-basis:50px; }
 }
+
+/* A consistent type and spacing rhythm across the guided screens. */
+#intro,#workshopScreen,#transformScreen,#shareDialog {
+  --heading-font:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  font-family:var(--heading-font);
+}
+#intro { padding:clamp(28px,5vw,64px) 24px; }
+#intro .intro-card { max-width:660px;padding:64px 56px 48px;border-radius:12px; }
+#intro .intro-eyebrow { font-size:10px;letter-spacing:.24em;margin-bottom:28px; }
+#intro .logo-star { font-size:32px;margin-bottom:32px; }
+#intro h1 { font-family:var(--heading-font);font-size:clamp(32px,4.2vw,52px);font-weight:700;line-height:1.5;letter-spacing:.035em; }
+#intro .lead { margin:28px auto 36px;max-width:30em;font-size:15px;line-height:2;letter-spacing:.035em; }
+#intro .experience-guide { margin:32px auto 36px;max-width:460px; }
+#intro .guide-view,#intro .guide-sound { padding:24px 0;gap:22px; }
+#intro .guide-view>div,#intro .guide-sound>div { flex-basis:300px; }
+#intro .experience-guide strong { font-size:16px;font-weight:700;line-height:1.75;letter-spacing:.02em; }
+#intro .experience-guide p { font-size:13px;line-height:1.95; }
+#intro .primary { min-height:54px;min-width:240px;font-size:15px; }
+#intro .intro-duration { margin-top:20px; }
+#intro .intro-footnote { font-size:11px;line-height:1.8;margin-top:28px; }
+.right-panel { max-width:660px;padding:40px; }
+.right-panel .question-num { font-size:11px;margin-bottom:18px; }
+.right-panel .question { font-family:var(--heading-font);font-size:clamp(23px,3vw,30px);font-weight:700;line-height:1.7;letter-spacing:.025em;margin-bottom:28px; }
+.options { gap:12px; }
+.right-panel .option { font-size:15px;line-height:1.8;padding:17px 20px;min-height:62px; }
+.stroke-copy-top .question { font-family:var(--heading-font);font-weight:700;line-height:1.7;letter-spacing:.025em; }
+.stroke-hint { font-size:13px;line-height:2; }
+.fairy-info-card { padding:40px !important; }
+.fairy-info-card .eyebrow,.gratitude-card .eyebrow { font-size:10px;letter-spacing:.22em;margin-bottom:20px; }
+.fairy-info-card h2 { font-family:var(--heading-font);font-size:clamp(26px,3.4vw,34px);font-weight:700;line-height:1.65;letter-spacing:.015em;margin-bottom:24px; }
+.fairy-info-card h2 span { display:block; }
+.fairy-info-card p,.gratitude-card p { font-size:15px;line-height:2;letter-spacing:.025em;max-width:30em;overflow-wrap:anywhere;text-wrap:pretty; }
+.fairy-info-card .strengths { margin-top:24px;gap:8px;max-width:none; }
+.fairy-info-card .strengths span { font-size:12px;padding:5px 12px; }
+.fairy-info-card .wishline { font-family:var(--heading-font);font-size:15px;line-height:1.95;font-weight:500;margin-top:28px;padding-top:24px; }
+.stage-next,.stage-next.warm { min-height:50px;margin-top:32px !important;font-size:14px; }
+.gratitude-card { padding:48px 40px 40px !important; }
+.gratitude-card h2 { font-family:var(--heading-font);font-size:clamp(23px,3vw,30px);font-weight:700;line-height:1.8;margin-bottom:28px; }
+.magic-copy { font-family:var(--heading-font);font-weight:500;line-height:1.9; }
+.combined-actions { gap:12px;margin-top:32px; }
+#shareDialog h2 { font-family:var(--heading-font);font-weight:700; }
+@media(max-width:760px) {
+  #intro { padding:28px 16px; }
+  #intro .intro-card { padding:40px 24px 32px; }
+  #intro .intro-eyebrow { font-size:9px;margin-bottom:24px; }
+  #intro .logo-star { margin-bottom:24px; }
+  #intro h1 { font-size:clamp(28px,7.8vw,38px);line-height:1.55;letter-spacing:.02em; }
+  #intro .lead { font-size:13px;margin:24px auto 28px; }
+  #intro .experience-guide { margin:28px auto 32px; }
+  #intro .guide-view,#intro .guide-sound { gap:14px;padding:20px 0; }
+  #intro .guide-symbol { flex-basis:44px; }
+  #intro .guide-view>div,#intro .guide-sound>div { flex-basis:240px; }
+  #intro .experience-guide strong { font-size:14px; }
+  #intro .experience-guide p { font-size:12px; }
+  #intro .primary { min-width:0;width:min(100%,260px); }
+  .right-panel { padding:28px 24px; }
+  .right-panel .question { font-size:23px;margin-bottom:24px; }
+  .right-panel .option { padding:15px 14px;font-size:14px;gap:12px; }
+  .fairy-info-card { padding:32px 26px !important; }
+  .fairy-info-card h2 { font-size:26px;margin-bottom:20px; }
+  .fairy-info-card p,.gratitude-card p { font-size:14px; }
+  .gratitude-card { padding:40px 28px 32px !important; }
+  .gratitude-card h2 { font-size:23px; }
+}
+@media(max-width:360px) {
+  #intro .intro-card { padding-left:20px;padding-right:20px; }
+  #intro .guide-view,#intro .guide-sound { gap:10px; }
+  #intro .guide-symbol { flex-basis:38px;font-size:23px; }
+  #intro .experience-guide strong { font-size:13px; }
+  #intro .experience-guide p { font-size:11px; }
+  .right-panel { padding:26px 20px; }
+  .fairy-info-card { padding:28px 22px !important; }
+  .fairy-info-card h2 { font-size:24px; }
+  .gratitude-card { padding:36px 24px 28px !important; }
+  .gratitude-card h2 { font-size:21px; }
+}
