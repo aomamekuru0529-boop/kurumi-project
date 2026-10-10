@@ -237,3 +237,22 @@ body:not([data-phase="quiz"]) #workshopScreen .right-panel { display:none; }
   #intro .guide-view,#intro .guide-sound { padding-top:16px;padding-bottom:16px; }
   #intro .intro-footnote { margin-top:16px; }
 }
+/* Phone-first reading and touch targets, including the home-indicator inset. */
+@media(max-width:760px) {
+  #intro { padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(24px,env(safe-area-inset-bottom)); }
+  #intro .lead { font-size:14px; }
+  #intro .experience-guide p { font-size:13px; }
+  #intro .intro-footnote { font-size:11px; }
+  #intro .primary,.stage-next,.stage-next.warm { min-height:52px; }
+  #transformScreen { padding-bottom:calc(32px + env(safe-area-inset-bottom)); }
+  .right-panel .option { min-height:60px; }
+  body[data-phase="combined"] #combinedActions { display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%; }
+  #combinedActions button { min-width:0;min-height:52px;padding:14px 12px;font-size:14px; }
+  #combinedActions #saveBtn { grid-column:1 / -1; }
+  #shareDialog #shareUrl { font-size:16px; }
+}
+@media(max-width:360px) {
+  #intro .lead { font-size:13px; }
+  #intro .experience-guide p { font-size:12px; }
+  #combinedActions button { font-size:13px; }
+}
