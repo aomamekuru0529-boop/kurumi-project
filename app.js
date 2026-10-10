@@ -144,9 +144,11 @@ function transformFairy(){
   later(()=>{
     show('transformScreen','evolved');mountFairy('#evolvedFairy',state.type);mountFairy('#combinedFairyVisual',state.type);
     $('#evolvedFairy').className='evolved-fairy center-still';
+    $('#transformScreen').style.setProperty('--fairy-accent',state.type.accent);
+    $('#transformScreen').style.setProperty('--fairy-color',state.type.color);
     for(const prefix of ['fairyInfo','combined']){
       const title=$(`#${prefix}Title`);title.replaceChildren();
-      for(const text of [`${state.type.label}タイプ`, `「${state.type.name}」`]){const span=document.createElement('span');span.textContent=text;title.append(span);}
+      for(const text of [`${state.type.label}タイプ`, prefix==='fairyInfo'?state.type.name:`「${state.type.name}」`]){const span=document.createElement('span');span.textContent=text;title.append(span);}
       $(`#${prefix}Desc`).textContent=state.type.desc;$(`#${prefix}Wish`).textContent=state.type.wish;
       const strengths=$(`#${prefix}Strengths`);strengths.replaceChildren();
       state.type.strengths.split('・').forEach((text,i)=>{if(i)strengths.append(document.createTextNode('・'));const span=document.createElement('span');span.textContent=text;strengths.append(span);});
